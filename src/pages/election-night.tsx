@@ -1,25 +1,27 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { Check, ChevronDown, ExternalLink, Flag, Map as MapIcon, MessageCircle, RefreshCw, Search, SlidersHorizontal, Star, X } from 'lucide-react';
-import { bucketCompare, chamberNames, chance, expectedFlips, farOff, fatigue, flipTally, groupByBucket, inPlay, isEarly, leadTally, liveBucket, liveBuckets, scenarioCount, scenarioFlips, winningTiers, CONTESTED_BAND, EARLY_REPORTING, LIVE_CLOSE_PTS, type Chamber, type LiveBucket, type LiveRace } from '../lib/election';
-import { closeNote, countdown, etTime, groupByClose, lastClose, nextClose, relative, scheduleSource, closeFor } from '../lib/schedule';
-import { PartyBanner, PartyProvider, PartyRoom, RacePicks, RaceReactions, usePartySummary } from '../components/party-room';
+import { Check, ChevronDown, ExternalLink, Flag, Map as MapIcon, RefreshCw, Search, Volume2, X } from 'lucide-react';
+import { brier, bucketCompare, chamberNames, chance, expectedFlips, farOff, fatigue, flipTally, groupByBucket, inPlay, isEarly, leadTally, liveBucket, liveBuckets, winningTiers, CONTESTED_BAND, EARLY_REPORTING, LIVE_CLOSE_PTS, type Chamber, type LiveBucket, type LiveRace } from '../lib/election';
+import { closeNote, scheduleSource, closeFor } from '../lib/schedule';
+import { reactions as reactionEmojis } from '../lib/party';
+import { levelSounds } from '../lib/sound-events';
+import { play, unlockAudio } from '../lib/sound';
 import { EventToast, SoundPin, SoundPromo, Soundboard, TrumpMeme, useSoundEvents } from '../components/sound-ui';
 import { startTelemetry, track } from '../lib/telemetry';
 import './election-night.css';
 import './election-map.css';
-import '../components/party-room.css';
 
 const ElectionMap = lazy(() => import('../components/election-map'));
 
 type ChamberState = { democratic: number; republican: number; independent: number; fetchedAt: string; sourceUpdatedAt: string; stale: boolean; error: string | null };
-type Data = { races: LiveRace[]; chambers: Record<Chamber, ChamberState>; score: { n: number; forecast: number | null; market: number | null }; baseline: { frozenAt: string; cutoff: string; forecastSource: string; forecastUrl: string }; generatedAt: string };
+type FinalInfo = { frozenAt: string; reason: 'all-called' | 'deadline'; uncalled: number; rule: string };
+type Data = { races: LiveRace[]; chambers: Record<Chamber, ChamberState>; score: { n: number; forecast: number | null; market: number | null; ids?: string[] }; baseline: { frozenAt: string; cutoff: string; forecastSource: string; forecastUrl: string }; generatedAt: string; final: FinalInfo | null; freezeBy?: string };
+type ReactionCounts = Record<string, Record<string, number>>;
 type Scope = 'contested' | 'all';
-type RaceOrder = 'live' | 'closing' | 'contested' | 'democratic' | 'republican' | 'gap' | 'state';
+type RaceOrder = 'live' | 'contested' | 'democratic' | 'republican' | 'gap' | 'state';
 
 const raceOrders: { value: RaceOrder; label: string; note: string }[] = [
-  { value: 'live', label: 'What’s happening now', note: `Called flips first, then uncalled races worth watching. A lead isn’t a call; under ${EARLY_REPORTING}% of the vote in is too early to tell.` },
-  { value: 'closing', label: 'Poll-closing time', note: 'Earliest polls first; closest model races within each time group.' },
-  { value: 'contested', label: 'Closest odds this morning', note: 'Win chances closest to 50% first (model; market odds for governors).' },
+  { value: 'live', label: 'How it ended', note: `Flips first, then seats we lost, then anything still uncalled. A lead isn’t a call; under ${EARLY_REPORTING}% of the vote in is too early to tell.` },
+  { value: 'contested', label: 'Closest odds that morning', note: 'Win chances closest to 50% first (model; market odds for governors).' },
   { value: 'democratic', label: 'Democratic-leaning first', note: 'Highest win chance for the listed Democrat or independent first (model; market odds for governors). No caucus affiliation is assumed.' },
   { value: 'republican', label: 'Republican-leaning first', note: 'Lowest win chance for the listed Democrat or independent first (model; market odds for governors).' },
   { value: 'gap', label: 'Biggest model–market gap', note: 'Largest difference in predicted win chance first; races without market odds go last.' },
@@ -40,8 +42,7 @@ function compareRaces(a: LiveRace, b: LiveRace, order: RaceOrder) {
     const ba = liveBucket(a), bb = liveBucket(b);
     return bucketRank[ba] - bucketRank[bb] || bucketCompare(a, b, ba) || stateOrder;
   }
-  const closeOrder = (closeFor(a.state)?.at ?? 'unknown').localeCompare(closeFor(b.state)?.at ?? 'unknown');
-  return (order === 'closing' ? closeOrder : 0) || closeness(a, b) || stateOrder;
+  return closeness(a, b) || stateOrder;
 }
 
 const percent = (p: number | null) => p === null ? '—' : `${Math.round(p * 100)}%`;
@@ -50,6 +51,7 @@ const signed = (n: number) => `${n > 0 ? '+' : ''}${n.toFixed(1)}`;
 const clock = (s: string) => new Date(s).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M$/, '');
 const time = (s: string) => new Date(s).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit' }) + ' ET';
 const LIST_LIMIT = 60;
+const day = (s: string) => new Date(s).toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' });
 const contested = inPlay;
 const closeness = (a: LiveRace, b: LiveRace) => Math.abs((chance(a) ?? .5) - .5) - Math.abs((chance(b) ?? .5) - .5);
 const signedInt = (n: number) => n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0';
@@ -85,22 +87,25 @@ function Sheet({ open, onClose, label, wide = false, children }: { open: boolean
   return <dialog ref={ref} className={`sheet${wide ? ' sheet-wide' : ''}`} aria-label={label} onClose={onClose} onClick={e => { if (e.target === ref.current) onClose(); }}>{open && <div className="sheet-body">{children}</div>}</dialog>;
 }
 
-function Ticker({ states, onJump }: { states: string[]; onJump: (at: string) => void }) {
-  const now = useNow(1000);
-  const next = nextClose(now, states);
-  if (!next) return <div className="ticker" role="status"><span className="ticker-label">{now < Date.parse(lastClose) ? 'Most polls are closed' : 'Every poll is closed'}</span><span className="ticker-what">{now < Date.parse(lastClose) ? `Alaska’s last polls close ${etTime(lastClose)}` : 'Keep counting. Every vote. Sorry, sir.'}</span></div>;
-  return <button className="ticker" onClick={() => onJump(next.at)} aria-label={`${next.first ? 'First' : 'Next'} polls close at ${etTime(next.at)} in ${next.states.join(', ')}. Countdown ${countdown(Date.parse(next.at) - now)}. Jump to these races.`}>
-    <span className="ticker-label">{next.first ? 'First polls close in' : 'Next polls close in'}</span>
-    <span className="ticker-clock" aria-hidden="true">{countdown(Date.parse(next.at) - now)}</span>
-    <span className="ticker-what" aria-hidden="true">{etTime(next.at)} · {next.states.join(' · ')}</span>
-  </button>;
+/** Replaces election night's countdown: says whether the count is still open or locked, and how many races never got a call. */
+function StatusStrip({ final, freezeBy, uncalled }: { final: FinalInfo | null; freezeBy?: string; uncalled: number }) {
+  if (final) return <div className="ticker is-final" role="status"><span className="ticker-label">Final score</span><span className="ticker-what">Locked {day(final.frozenAt)} · {final.uncalled ? `${final.uncalled} ${final.uncalled === 1 ? 'race' : 'races'} never called` : 'every race called'}</span></div>;
+  const lockDay = freezeBy ? day(new Date(Date.parse(freezeBy) - 1).toISOString()) : null;
+  return <div className="ticker" role="status"><span className="ticker-label">Still counting</span><span className="ticker-what">{uncalled} uncalled · locks {lockDay ? `${lockDay} at midnight` : 'soon'}, or when all are called</span></div>;
+}
+
+/** Final emoji counts from the party room (closed Nov 5, 00:00 ET). Display only. */
+function FinalReactions({ counts, label }: { counts?: Record<string, number>; label: string }) {
+  const shown = reactionEmojis.filter(r => counts?.[r.emoji]);
+  if (!shown.length) return null;
+  return <p className="race-reactions"><span className="sr-only">The room’s reactions for {label}: {shown.map(r => `${counts![r.emoji]} ${r.label.toLowerCase()}`).join(', ')}.</span>{shown.map(r => <span key={r.emoji} aria-hidden="true">{r.emoji}<b>{counts![r.emoji]}</b></span>)}</p>;
 }
 
 const chipLabels = ['Low', 'Win', 'Bigly', 'So much', 'Tired', 'No more'];
 const chipRanges = ['<5', '5–14', '15–29', '30–44', '45–59', '60+'];
 const chipTilt = [-3, 2, -2, 3, -2, 2];
 
-function LevelSticker({ flips, caption }: { flips: number; caption: string }) {
+function LevelSticker({ flips, caption, final = false }: { flips: number; caption: string; final?: boolean }) {
   const tier = fatigue(flips);
   const index = winningTiers.findIndex(t => t.min === tier.min);
   const next = winningTiers[index + 1];
@@ -108,7 +113,7 @@ function LevelSticker({ flips, caption }: { flips: number; caption: string }) {
     <p className="meter-caption">{caption}</p>
     <p className="meter-title" aria-live="polite">{tier.title}</p>
     <p className="meter-line">{tier.line}</p>
-    <p className="meter-next">{next ? `Next: ${next.short} · ${next.min - flips} more ${next.min - flips === 1 ? 'flip' : 'flips'}.` : 'Tell Mar-a-Lago we said thanks.'}</p>
+    <p className="meter-next">{!next ? 'Tell Mar-a-Lago we said thanks.' : final ? `${next.min - flips} ${next.min - flips === 1 ? 'flip' : 'flips'} short of ${next.short}. Sad!` : `Next: ${next.short} · ${next.min - flips} more ${next.min - flips === 1 ? 'flip' : 'flips'}.`}</p>
   </div>;
 }
 
@@ -147,7 +152,7 @@ function ChamberCard({ spec, c, flips }: { spec: CardSpec; c: ChamberState; flip
   </div>;
 }
 
-function RaceRow({ race, open, onToggle, now, forecastUrl, fresh }: { race: LiveRace; open: boolean; onToggle: () => void; now: number; forecastUrl: string; fresh: boolean }) {
+function RaceRow({ race, open, onToggle, now, forecastUrl, fresh, reactions }: { race: LiveRace; open: boolean; onToggle: () => void; now: number; forecastUrl: string; fresh: boolean; reactions?: Record<string, number> }) {
   const r = race.result;
   const close = closeFor(race.state);
   const pollsOpen = r.status === 'waiting' && close && now < Date.parse(close.at);
@@ -167,30 +172,25 @@ function RaceRow({ race, open, onToggle, now, forecastUrl, fresh }: { race: Live
       <div><dt><span>Market</span> win %</dt><dd aria-label={race.market ? `${percent(race.market.probability)} market chance of winning for ${race.candidate}, frozen at 8 a.m. Eastern` : 'Market win probability unavailable'}>{race.market ? percent(race.market.probability) : '—'}</dd></div>
     </dl>
     <dl className={`race-live status-${pollsOpen ? 'open' : r.status}`}>
-      <div><dt>Live count</dt>{r.margin !== null && <dd className="race-margin">{margin(r.margin, race.party)}</dd>}<dd className={`race-status${r.margin === null ? ' is-only' : ''}`}>{r.status === 'won' && <Check size={12} aria-hidden="true"/>}{statusText(race, Boolean(pollsOpen))}</dd></div>
+      <div><dt>Count</dt>{r.margin !== null && <dd className="race-margin">{margin(r.margin, race.party)}</dd>}<dd className={`race-status${r.margin === null ? ' is-only' : ''}`}>{r.status === 'won' && <Check size={12} aria-hidden="true"/>}{statusText(race, Boolean(pollsOpen))}</dd></div>
     </dl>
-    <RaceReactions race={race}/>
+    <FinalReactions counts={reactions} label={race.label}/>
     {open && <div className="race-more" id={`more-${race.id}`}>
       {r.reason && <p className="notice">{r.reason}. The forecast stays visible; live numbers are withheld.</p>}
       {r.votes > 0 && <div className="votes"><div><span>{race.candidate}</span><b>{r.candidateVotes?.toLocaleString() ?? '—'}</b></div><div><span>{race.opponent}</span><b>{r.opponentVotes?.toLocaleString() ?? '—'}</b></div>{r.candidateShare !== null && <div className="vote-bars" aria-hidden="true"><span style={{ width: `${r.candidateShare}%` }}/><i style={{ width: `${r.opponentShare}%` }}/></div>}</div>}
       <ul className="race-facts">
         <li>{closeNote(race.state)}</li>
-        {race.margin !== null ? <li>The model expected a <b>{margin(race.margin, race.party)}</b> finish.{delta !== null && <> The live count is running <b className={delta >= 0 ? 'positive' : 'negative'}>{signed(delta)} pts</b> against that so far; early counts swing as different areas report.</>}</li> : <li>No model covers governor races; the market odds are the only pre-election number here.</li>}
+        {race.margin !== null ? <li>The model expected a <b>{margin(race.margin, race.party)}</b> finish.{delta !== null && <> {called ? <> The count finished <b className={delta >= 0 ? 'positive' : 'negative'}>{signed(delta)} pts</b> against that.</> : <> The count so far is running <b className={delta >= 0 ? 'positive' : 'negative'}>{signed(delta)} pts</b> against that.</>}</>}</li> : <li>No model covers governor races; the market odds are the only pre-election number here.</li>}
         <li>{race.held === 'R' ? 'Republican-held going in, so a win here is a flip.' : 'Democratic-held going in, so a loss here is a flip the wrong way.'}</li>
         {r.winner && <li>civicAPI called this race for <b>{r.winner}</b>. That’s a source call, not certification.</li>}
         {race.market && <li>Market odds: Polymarket’s last price at or before 8 a.m. ET ({new Date(race.market.observedAt).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit' })}). Not a live quote.</li>}
       </ul>
-      <RacePicks race={race}/>
       <div className="source-links">{race.probability !== null && <a href={forecastUrl} target="_blank" rel="noreferrer">Forecast <ExternalLink size={12}/></a>}{race.raceId && <a href={`https://civicapi.org/results/elections/${race.raceId}`} target="_blank" rel="noreferrer">Live count <ExternalLink size={12}/></a>}{race.market && <a href={race.market.url} target="_blank" rel="noreferrer">Market <ExternalLink size={12}/></a>}</div>
     </div>}
   </article>;
 }
 
 export default function ElectionNight() {
-  return <PartyProvider><ElectionDashboard/></PartyProvider>;
-}
-
-function ElectionDashboard() {
   const [data, setData] = useState<Data | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -202,16 +202,11 @@ function ElectionDashboard() {
   const [jump, setJump] = useState<string | null>(null);
   const [mapOpen, setMapOpen] = useState(false);
   const [boardOpen, setBoardOpen] = useState(false);
-  const [chatOpen, setChatOpen] = useState(() => window.location.hash === '#party');
-  const [focusCommentId, setFocusCommentId] = useState<number | undefined>();
-  const [swing, setSwing] = useState(0);
-  const [overrides, setOverrides] = useState<Record<string, boolean>>({});
-  const [includeI, setIncludeI] = useState(false);
-  const [flipScope, setFlipScope] = useState<Scope>('contested');
   const [limit, setLimit] = useState(LIST_LIMIT);
   const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set());
-  const party = usePartySummary();
+  const [reactions, setReactions] = useState<ReactionCounts>({});
   const now = useNow(30_000);
+  const locked = useRef(false);
 
   const busy = useRef(false);
   const seenCalls = useRef<Set<string> | null>(null);
@@ -225,11 +220,12 @@ function ElectionDashboard() {
       if (!response.ok) throw new Error('The results desk is temporarily unavailable.');
       const body = await response.json();
       if (!body.races || !body.chambers) throw new Error('The results desk sent an unreadable update.');
-      setData(body); setError('');
+      setData(body); setError(''); locked.current = Boolean(body.final);
     } catch (e) { setError(e instanceof Error && !['TimeoutError', 'AbortError', 'TypeError', 'SyntaxError'].includes(e.name) ? e.message : 'The results desk didn’t answer.'); }
     finally { busy.current = false; setLoading(false); }
   }
-  useEffect(() => { void refresh(); const timer = setInterval(() => { if (document.visibilityState === 'visible') void refresh(); }, 30_000); return () => clearInterval(timer); }, []);
+  useEffect(() => { void refresh(); const timer = setInterval(() => { if (!locked.current && document.visibilityState === 'visible') void refresh(); }, 120_000); return () => clearInterval(timer); }, []);
+  useEffect(() => { fetch('/api/reactions', { headers: { Accept: 'application/json' } }).then(r => r.ok ? r.json() : null).then(body => { if (body?.counts) setReactions(body.counts); }).catch(() => {}); }, []);
   useEffect(() => {
     if (!data) return;
     const called = data.races.filter(r => r.result.status === 'won' || r.result.status === 'lost').map(r => r.id);
@@ -241,7 +237,6 @@ function ElectionDashboard() {
     const timer = setTimeout(() => setFreshCalls(new Set()), 4000);
     return () => clearTimeout(timer);
   }, [data]);
-  useEffect(() => { history.replaceState(null, '', chatOpen ? '#party' : location.pathname + location.search); if (chatOpen) track('chat_open'); }, [chatOpen]);
   useEffect(() => { if (mapOpen) track('map_open'); }, [mapOpen]);
   useEffect(() => { if (boardOpen) track('soundboard_open'); }, [boardOpen]);
   useEffect(() => { startTelemetry(); }, []);
@@ -269,7 +264,14 @@ function ElectionDashboard() {
     { chamber: 'House', total: 435, threshold: 218, thresholdLabel: '218 for control.', expected: expectedD('House'), expectedLabel: 'Model', note: 'Called seats only; a lead is not a call.' },
     { chamber: 'Governor', total: 50, threshold: 26, thresholdLabel: '26 = most states.', expected: 6 + expectedD('Governor'), expectedLabel: 'Market', note: 'Includes 14 not up (6 D, 8 R). Market odds only.' },
   ];
-  const order: RaceOrder = chosenOrder ?? (votesIn ? 'live' : 'closing');
+  const order: RaceOrder = chosenOrder ?? 'live';
+  const final = data.final;
+  const uncalled = data.races.filter(r => !['won', 'lost', 'unavailable'].includes(r.result.status)).length;
+  const scored = data.races.filter(r => data.score.ids?.includes(r.id));
+  const miss = (pick: (r: LiveRace) => number) => scored.map(r => ({ r, p: pick(r), err: brier(pick(r), r.result.status === 'won') })).sort((a, b) => b.err - a.err)[0];
+  const modelMiss = scored.length ? miss(r => r.probability!) : null;
+  const marketMiss = scored.length ? miss(r => r.market!.probability) : null;
+  const missLine = (m: NonNullable<typeof modelMiss>) => `${m.r.label}: ${percent(m.p)} for ${surname(m.r.candidate)}, who ${m.r.result.status === 'won' ? 'won' : 'lost'}`;
   const leads = leadTally(data.races);
   const ifLeadsHeld = flips.net + leads.net;
   const inChamber = data.races.filter(r => r.chamber === chamber);
@@ -277,21 +279,16 @@ function ElectionDashboard() {
   const q = query.trim().toLowerCase();
   const shown = inChamber.filter(r => q ? `${r.candidate} ${r.opponent} ${r.label} ${r.state}`.toLowerCase().includes(q) : scope === 'all' || contested(r)).sort((a, b) => compareRaces(a, b, order));
   const visible = shown.slice(0, limit);
-  const groups = groupByClose(visible);
   const bucketGroups = groupByBucket(shown);
   const groupCap = window.innerWidth < 720 ? 6 : 10;
   const bucketCounts = bucketGroups.filter(g => ['flipped', 'lost', 'close', 'longshot', 'trouble', 'early'].includes(g.id));
   const activeOrder = raceOrders.find(o => o.value === order)!;
-  const nextAt = nextClose(now, inChamber.map(r => r.state))?.at;
-  const stale = senate.stale || house.stale || governors.stale;
+  const stale = !final && (senate.stale || house.stale || governors.stale);
   const checkedAt = [senate, house, governors].map(c => c.fetchedAt).sort()[0];
   const receivedTimes = `Senate ${time(senate.fetchedAt)}; House ${time(house.fetchedAt)}; Governors ${Date.parse(governors.fetchedAt) ? time(governors.fetchedAt) : 'not yet'}`;
-  const hypSenate = scenarioCount(data.races, 'Senate', swing, overrides, includeI);
-  const hypHouse = scenarioCount(data.races, 'House', swing, overrides, includeI);
-  const flipRaces = data.races.filter(r => r.chamber === 'Senate' && (flipScope === 'all' || contested(r))).sort((a, b) => (b.margin ?? 0) - (a.margin ?? 0));
-  const hypFlips = { Senate: scenarioFlips(data.races, 'Senate', swing, overrides, includeI), House: scenarioFlips(data.races, 'House', swing, overrides, includeI) };
-  const scoreLine = !data.score.n ? 'Who saw it coming: the nerds or the crypto bros?'
-    : data.score.market! < data.score.forecast! ? 'So far, the crypto bros (market) are beating the nerds (model).' : data.score.forecast! < data.score.market! ? 'So far, the nerds (model) are beating the crypto bros (market).' : 'So far, the nerds (model) and the crypto bros (market) are dead even.';
+  const modelWon = data.score.forecast! < data.score.market!, marketWon = data.score.market! < data.score.forecast!;
+  const scoreLine = !data.score.n ? 'Nothing to score yet: no Senate race with both a model and a market number has been called.'
+    : modelWon ? `The nerds (model) beat the crypto bros (market)${final ? '' : ', so far'}.` : marketWon ? `The crypto bros (market) beat the nerds (model)${final ? '' : ', so far'}.` : `The nerds (model) and the crypto bros (market) finished dead even${final ? '' : ', so far'}.`;
 
   function toggle(id: string) { setOpenId(openId === id ? null : id); }
   function goTo(id: string) { setJump(id); }
@@ -303,29 +300,22 @@ function ElectionDashboard() {
     if (!contested(local[0])) setScope('all');
     setOpenId(local[0].id); goTo(`race-${local[0].id}`);
   }
-  function jumpToClose(at: string) {
-    setChamber('Senate'); setQuery(''); setScope('all'); setOrder('closing'); setLimit(Infinity); goTo(`close-${Date.parse(at)}`);
-  }
-  function previewSeats(seats: number) {
-    const ranked = data!.races.filter(r => r.chamber === 'Senate' && r.party === 'D').sort((a, b) => (b.margin ?? 0) - (a.margin ?? 0));
-    setSwing(0); setIncludeI(false); setFlipScope('all');
-    setOverrides(Object.fromEntries(ranked.map((r, i) => [r.id, i < seats - 34])));
-  }
+  function playFinale() { unlockAudio(); void play(levelSounds[winningTiers.findIndex(t => t.min === fatigue(flips.net).min)]); }
 
   return <div className="election-app">
     <a className="skip-link" href="#races">Skip to the races</a>
-    <div className="live-banner"><Ticker states={senateStates} onJump={jumpToClose}/><PartyBanner onOpen={id => { setFocusCommentId(id); setChatOpen(true); }}/></div>
+    <div className="live-banner"><StatusStrip final={final} freezeBy={data.freezeBy} uncalled={uncalled}/></div>
     <header className="masthead">
       <button className="wordmark" aria-label="Back to the top" onClick={() => window.scrollTo({ top: 0, behavior: reduceMotion() ? 'instant' : 'smooth' })}>TOW<span>★</span></button>
-      <div className="masthead-title">Tired of Winning?<span>Midterms · Nov 3, 2026</span></div>
+      <div className="masthead-title">Tired of Winning?<span>Midterms · Nov 3, 2026 · {final ? 'final' : 'still counting'}</span></div>
       <SoundPin/>
-      <button className={`live-pin${stale || error ? ' warning' : ''}`} onClick={refresh} aria-busy={loading} aria-label={`${stale || error ? 'Feed delayed. ' : ''}Last received: ${receivedTimes}. Refresh results`} title={`Last received: ${receivedTimes}. Source updated: Senate ${time(senate.sourceUpdatedAt)}; House ${time(house.sourceUpdatedAt)}.`}>
+      {final ? <span className="live-pin is-final" title={`Locked ${day(final.frozenAt)}, 2026. ${final.rule}`}><small>Locked</small><b>{day(final.frozenAt)}</b></span> : <button className={`live-pin${stale || error ? ' warning' : ''}`} onClick={refresh} aria-busy={loading} aria-label={`${stale || error ? 'Feed delayed. ' : ''}Last received: ${receivedTimes}. Refresh results`} title={`Last received: ${receivedTimes}. Source updated: Senate ${time(senate.sourceUpdatedAt)}; House ${time(house.sourceUpdatedAt)}.`}>
         <small>{stale || error ? 'Feed' : 'As of'}</small><b>{stale || error ? 'Delayed' : clock(checkedAt)}</b><RefreshCw size={12} className={loading ? 'spinning' : ''} aria-hidden="true"/>
-      </button>
+      </button>}
     </header>
 
     <main id="main">
-      {(error || stale) && <div className="error-banner" role="status"><span>{error || 'A results source is delayed.'} Last received: {receivedTimes}. Retrying automatically.</span><button onClick={refresh}>Retry</button></div>}
+      {!final && (error || stale) && <div className="error-banner" role="status"><span>{error || 'A results source is delayed.'} Last received: {receivedTimes}. Retrying automatically.</span><button onClick={refresh}>Retry</button></div>}
 
       <section className="hero" aria-labelledby="hero-title">
         <div className="hero-stickers">
@@ -333,35 +323,37 @@ function ElectionDashboard() {
             <h1 id="hero-title">Tired of <em>winning?</em></h1>
             <p className="bumper-tag"><span aria-hidden="true">★★★</span> Make winning exhausting again</p>
           </div>
-          <LevelSticker flips={flips.net} caption="Tonight · net flips, all offices"/>
+          <LevelSticker flips={flips.net} caption={final ? 'Final · net flips, all offices' : 'Still counting · net flips, all offices'} final={Boolean(final)}/>
         </div>
         <div className="hero-board">
-          <div className="flip-total" role="img" aria-label={`Net flips so far across the Senate, House and governors: ${signedInt(flips.net)}. ${flips.gained} taken from the GOP, ${flips.lost} lost. This morning's odds implied about ${signedInt(Math.round(expectedNet))}.`}>
+          <div className="flip-total" role="img" aria-label={`Net flips across the Senate, House and governors: ${signedInt(flips.net)}. ${flips.gained} taken from the GOP, ${flips.lost} lost. Election-morning odds implied about ${signedInt(Math.round(expectedNet))}.`}>
             <b aria-hidden="true">{signedInt(flips.net)}</b>
-            <span aria-hidden="true"><strong>Net flips so far</strong><small>{flips.gained} taken from the GOP · {flips.lost} lost · this morning’s odds implied ≈ {signedInt(Math.round(expectedNet))}</small></span>
+            <span aria-hidden="true"><strong>{final ? 'Net flips, final' : 'Net flips so far'}</strong><small>{flips.gained} taken from the GOP · {flips.lost} lost · election-morning odds implied ≈ {signedInt(Math.round(expectedNet))}</small></span>
           </div>
-          {votesIn && <p className="flip-pipeline"><b>Not called yet:</b> ahead in {leads.ahead} more GOP {leads.ahead === 1 ? 'seat' : 'seats'}, behind in {leads.behind} of ours. If every lead held: <b>{signedInt(ifLeadsHeld)}</b>, {fatigue(ifLeadsHeld).short.toLowerCase()}. Leads aren’t calls.</p>}
+          {!final && votesIn && <p className="flip-pipeline"><b>Not called yet:</b> ahead in {leads.ahead} more GOP {leads.ahead === 1 ? 'seat' : 'seats'}, behind in {leads.behind} of ours. If every lead held: <b>{signedInt(ifLeadsHeld)}</b>, {fatigue(ifLeadsHeld).short.toLowerCase()}. Leads aren’t calls.</p>}
           <Ladder flips={flips.net}/>
           <div className="chamber-trio">{cards.map(spec => <ChamberCard key={spec.chamber} spec={spec} c={data.chambers[spec.chamber]} flips={tallies[spec.chamber]}/>)}</div>
-          <p className="hero-sub">{calls.length ? `${calls.length} races called so far (${senateCalls} Senate). A flip counts only once it’s called.` : 'No calls yet. Hydrate, pace yourself, and don’t declare victory at 2 a.m.'} Flips = GOP-held seats our side takes, minus our seats lost.</p>
-          {!votesIn && <p className="hero-todo">While we wait: <button onClick={() => goTo('races')}>make your picks</button>, <button onClick={() => goTo('whatif')}>rig a hypothetical (legally)</button>, or <button onClick={() => setChatOpen(true)}>say hi in the chat</button>.</p>}
+          <p className="hero-sub">{calls.length} races called{final ? '' : ' so far'} ({senateCalls} Senate). {final && final.uncalled ? `${final.uncalled} never got a call before the lock and don’t count. ` : ''}Flips = GOP-held seats our side took, minus our seats lost. A lead never counts.</p>
         </div>
       </section>
 
 
-      <section className="board" aria-label="Model versus market scorecard">
+      <section className="board" aria-labelledby="verdict-title">
         <div className="scorecard">
-          <p className="eyebrow">Model vs. market</p>
-          <p className="scorecard-line">{scoreLine}</p>
-          <p className="scorecard-detail">{data.score.n ? <>Average error, lower is better: model <b>{data.score.forecast!.toFixed(3)}</b> · market <b>{data.score.market!.toFixed(3)}</b>, across {data.score.n} called Senate {data.score.n === 1 ? 'race' : 'races'}.</> : 'As races are called, we score this morning’s model (Split Ticket) against the market (Polymarket).'}</p>
-          {calls.length > 0 && <p className="scorecard-detail">Our side has won <b>{wins.length}</b> of {calls.length} called races; this morning’s odds expected <b>{calls.reduce((s, r) => s + (chance(r) ?? 0), 0).toFixed(1)}</b>.</p>}
+          <p className="eyebrow">Model vs. market · who called it?</p>
+          <h2 className="scorecard-line" id="verdict-title">{scoreLine}</h2>
+          <p className="scorecard-detail">{data.score.n ? <>Average error, lower is better: model <b>{data.score.forecast!.toFixed(3)}</b> · market <b>{data.score.market!.toFixed(3)}</b>, across the {data.score.n} called Senate {data.score.n === 1 ? 'race' : 'races'} that had both numbers. Model: Split Ticket. Market: Polymarket. Both frozen the morning of Nov 3.</> : 'Each called Senate race scores the morning’s model (Split Ticket) against the morning’s market (Polymarket).'}</p>
+          {modelMiss && marketMiss && <p className="scorecard-detail">{modelMiss.r.id === marketMiss.r.id
+            ? <>Worst miss for both: <b>{modelMiss.r.label}</b>, where {surname(modelMiss.r.candidate)} {modelMiss.r.result.status === 'won' ? 'won' : 'lost'} after the model gave {percent(modelMiss.p)} and the market {percent(marketMiss.p)}.</>
+            : <>Worst miss · model: {missLine(modelMiss)}. Market: {missLine(marketMiss)}.</>}</p>}
+          {calls.length > 0 && <p className="scorecard-detail">Our side won <b>{wins.length}</b> of {calls.length} called races; election-morning odds expected <b>{calls.reduce((s, r) => s + (chance(r) ?? 0), 0).toFixed(1)}</b>.</p>}
         </div>
       </section>
 
       <section className="races" id="races" aria-labelledby="races-title">
         <div className="section-head">
-          <p className="eyebrow">{order === 'closing' ? 'In poll-closing order · Eastern time' : order === 'live' ? 'What’s happening now · live count' : activeOrder.label}</p>
-          <h2 id="races-title">{order === 'closing' ? 'When to panic, in order.' : order === 'live' ? 'Where it’s getting weird.' : 'Races to obsess over.'}</h2>
+          <p className="eyebrow">{order === 'live' ? 'How it ended · source calls' : activeOrder.label}</p>
+          <h2 id="races-title">{order === 'live' ? 'Where it got weird.' : 'Every race, sorted.'}</h2>
         </div>
         <div className="race-controls" id="race-controls">
           <Segmented label="Chamber" value={chamber} options={[['Senate', 'Senate'], ['House', 'House'], ['Governor', 'Gov']]} onChange={c => { setChamber(c); setOpenId(null); setLimit(LIST_LIMIT); }}/>
@@ -371,7 +363,7 @@ function ElectionDashboard() {
         </div>
         {votesIn && bucketCounts.length > 0 && <div className="bucket-chips" role="group" aria-label="Jump to a live status group">{bucketCounts.map(g => <button key={g.id} type="button" className={`bucket-chip chip-${g.id}`} onClick={() => { setOrder('live'); goTo(`bucket-${g.id}`); }}><b>{g.items.length}</b> {(g.items.length === 1 ? g.one : g.title).toLowerCase()}</button>)}</div>}
         <details className="read-me"><summary>How to read this</summary>
-        <p className="legend"><b>Win % = chance of winning, not vote share.</b> Both are for the listed Democrat or independent. <b>Model:</b> Split Ticket (no governor model). <b>Market:</b> Polymarket, frozen at 8 a.m. ET. <b>Live count:</b> vote margin so far.</p>
+        <p className="legend"><b>Win % = chance of winning, not vote share.</b> Both are for the listed Democrat or independent. <b>Model:</b> Split Ticket (no governor model). <b>Market:</b> Polymarket, frozen at 8 a.m. ET on Nov 3. <b>Count:</b> vote margin as civicAPI reported it. Emoji: the watch-party room’s reactions.</p>
         <p className="sort-note" id="race-order-note" role="status">{activeOrder.note}{q ? ' Search covers every race.' : scope === 'contested' ? ` Contested: ${CONTESTED_BAND * 100}–${100 - CONTESTED_BAND * 100}% odds, within ${LIVE_CLOSE_PTS} points, or an upset in progress.` : ''}{order === 'gap' && !shown.some(r => r.market) && ' No market odds are available for these races.'}</p>
         </details>
         {order === 'live' ? bucketGroups.map(g => {
@@ -379,59 +371,27 @@ function ElectionDashboard() {
           const items = expanded ? g.items : g.items.slice(0, groupCap);
           return <div className={`close-group bucket-group group-${g.id}`} id={`bucket-${g.id}`} key={g.id}>
           <div className="close-head"><h3>{g.items.length === 1 ? g.one : g.title}</h3><span className="close-status">{g.note}</span><span className="close-count">{g.items.length} {g.items.length === 1 ? 'race' : 'races'}</span></div>
-          <div className="race-list">{items.map(r => <RaceRow key={r.id} race={r} open={openId === r.id} onToggle={() => toggle(r.id)} now={now} forecastUrl={data.baseline.forecastUrl} fresh={freshCalls.has(r.id)}/>)}</div>
+          <div className="race-list">{items.map(r => <RaceRow key={r.id} race={r} open={openId === r.id} onToggle={() => toggle(r.id)} now={now} forecastUrl={data.baseline.forecastUrl} fresh={freshCalls.has(r.id)} reactions={reactions[r.id]}/>)}</div>
           {items.length < g.items.length && <button className="show-all group-more" onClick={() => setOpenGroups(new Set(openGroups).add(`${chamber}:${g.id}`))}>Show all {g.items.length} · {g.title.toLowerCase()}</button>}
-        </div>; }) : order !== 'closing' ? <div className="race-list">{visible.map(r => <RaceRow key={r.id} race={r} open={openId === r.id} onToggle={() => toggle(r.id)} now={now} forecastUrl={data.baseline.forecastUrl} fresh={freshCalls.has(r.id)}/>)}</div> : groups.map(g => {
-          const at = Date.parse(g.at);
-          const closed = g.at !== 'unknown' && now >= at;
-          const restOpen = closed && g.items.some(r => { const rest = closeFor(r.state)?.rest; return rest && now < Date.parse(rest); });
-          return <div className={`close-group${g.at === nextAt ? ' is-next' : ''}${closed ? ' is-closed' : ''}`} id={`close-${at}`} key={g.at}>
-            <div className="close-head"><h3>{g.at === 'unknown' ? 'Time unavailable' : etTime(g.at)}</h3><span className="close-status">{g.at === 'unknown' ? '' : closed ? (restOpen ? 'Most polls closed' : 'Polls closed') : g.at === nextAt ? `Next up · polls close ${relative(at - now)}` : `Polls close ${relative(at - now)}`}</span><span className="close-count">{g.items.length} {g.items.length === 1 ? 'race' : 'races'}</span></div>
-            <div className="race-list">{g.items.map(r => <RaceRow key={r.id} race={r} open={openId === r.id} onToggle={() => toggle(r.id)} now={now} forecastUrl={data.baseline.forecastUrl} fresh={freshCalls.has(r.id)}/>)}</div>
-          </div>;
-        })}
+        </div>; }) : <div className="race-list">{visible.map(r => <RaceRow key={r.id} race={r} open={openId === r.id} onToggle={() => toggle(r.id)} now={now} forecastUrl={data.baseline.forecastUrl} fresh={freshCalls.has(r.id)} reactions={reactions[r.id]}/>)}</div>}
         {!shown.length && <div className="empty-state"><Flag size={24} aria-hidden="true"/><h3>No matching races.</h3><p>Try a surname, a state like “Ohio,” or a district like “CA-22.”</p><button className="text-button" onClick={() => setQuery('')}>Clear the search</button></div>}
         {order !== 'live' && shown.length > visible.length && <button className="show-all" onClick={() => setLimit(Infinity)}>Show {shown.length - visible.length} more {chamber === 'Governor' ? 'governor' : chamber} races</button>}
         {scope === 'contested' && !q && <button className="show-all" onClick={() => { setScope('all'); setLimit(LIST_LIMIT); }}>Show all {inChamber.length} {chamber === 'Governor' ? 'governor' : chamber} races, safe seats included</button>}
       </section>
 
-      <section className="whatif" id="whatif" aria-labelledby="whatif-title">
-        <div className="section-head">
-          <p className="eyebrow scenario-flag"><SlidersHorizontal size={13} aria-hidden="true"/> Scenario mode · your assumptions, not results</p>
-          <h2 id="whatif-title">What if?</h2>
-          <p className="section-sub">Go ahead, find yourself 11,780 votes. Shift every race or flip a few; it’s arithmetic on this morning’s model, not a prediction.</p>
-        </div>
-        <div className="whatif-grid">
-          <div className="whatif-result">
-            <div className="whatif-seats"><strong aria-live="polite">{hypSenate}</strong><span>{includeI ? 'Democratic + independent' : 'Democratic-caucus'} Senate seats</span></div>
-            <p className="whatif-flips" aria-live="polite">Net flips in this scenario: Senate <b>{signedInt(hypFlips.Senate)}</b> · House <b>{signedInt(hypFlips.House)}</b></p>
-            <p className="whatif-house">House in this scenario: <b>{hypHouse} {includeI ? 'D + I' : 'D'}</b> (218 for control). Governors stay out of the what-if: there’s no model to shift.</p>
-          </div>
-          <div className="whatif-controls">
-            <div className="slider-label"><label htmlFor="swing">Move every race</label><b>{swing === 0 ? 'No shift' : `${Math.abs(swing).toFixed(1)} pts toward ${swing > 0 ? 'D / I' : 'R'}`}</b></div>
-            <input id="swing" type="range" min="-6" max="6" step=".5" value={swing} onChange={e => { setSwing(Number(e.target.value)); setOverrides({}); }}/>
-            <div className="range-labels" aria-hidden="true"><span>R +6</span><span>D / I +6</span></div>
-            <div className="scenario-actions"><button className="primary-button" onClick={() => previewSeats(59)}>Find me 59 seats <Star size={15}/></button><button className="text-button" onClick={() => { setSwing(0); setOverrides({}); setIncludeI(false); }}>Reset</button></div>
-            <label className="checkbox-label"><input type="checkbox" checked={includeI} onChange={e => setIncludeI(e.target.checked)}/> Count independent challengers too <small>(no caucus assumed)</small></label>
-            <div className="flip-head"><h3>Flip a race</h3><Segmented label="Races to flip" value={flipScope} options={[['contested', 'Contested'], ['all', 'All 35']]} onChange={setFlipScope}/></div>
-            <div className="flip-list">{flipRaces.map(r => { const won = overrides[r.id] ?? (r.margin ?? -Infinity) + swing > 0; return <button key={r.id} aria-pressed={won} onClick={() => { if (r.party === 'I') setIncludeI(true); setOverrides({ ...overrides, [r.id]: !won }); }} aria-label={`${r.label}: ${r.candidate} ${won ? 'wins' : 'loses'} in this scenario`}><span className="flip-code">{r.state}</span><span className="flip-name">{r.candidate.split(' ').at(-1)}{r.party === 'I' && <small> (I)</small>}</span><span className={won ? 'flip-mark is-on' : 'flip-mark'}>{won ? <Check size={14}/> : <X size={14}/>}</span></button>; })}</div>
-          </div>
-        </div>
-      </section>
     </main>
 
     <footer>
       <span className="footer-wordmark">Tired of Winning?<span>★</span></span>
-      <p>Strong feelings, real sources, zero alternative facts. Forecast frozen this morning; live count checked every minute.</p>
-      <p>We count visits anonymously to see how big the party got: a random browser ID, device type and the site that sent you. Counting uses no names, IP addresses or ad trackers, and Global Privacy Control turns it off. <button className="text-button" onClick={() => setBoardOpen(true)}>Open the soundboard</button></p>
+      <p>Strong feelings, real sources, zero alternative facts. Forecast and odds frozen the morning of Nov 3, 2026. {final ? `Results as civicAPI reported them when the page locked on ${day(final.frozenAt)}: source calls, not certification.` : 'Results from civicAPI, checked hourly and on each visit until the page locks: source calls, not certification.'}</p>
+      <p>Built for one watch party. The chat closed at midnight on Nov 4; only its emoji counts are kept here. We count visits anonymously: a random browser ID, device type and the site that sent you. No names, IP addresses or ad trackers; Global Privacy Control turns it off. <button className="text-button" onClick={() => setBoardOpen(true)}>Open the soundboard</button></p>
       <div><a href={data.baseline.forecastUrl} target="_blank" rel="noreferrer">Split Ticket</a><a href="https://civicapi.org" target="_blank" rel="noreferrer">civicAPI</a><a href="https://polymarket.com" target="_blank" rel="noreferrer">Polymarket</a><a href={scheduleSource} target="_blank" rel="noreferrer">Poll times: The Hill</a><a href="https://zo.computer" target="_blank" rel="noreferrer">Built on Zo</a></div>
     </footer>
 
     <nav className="action-bar" aria-label="Quick actions">
       <button onClick={() => goTo('race-controls')}><Flag size={18} aria-hidden="true"/><span>Races</span></button>
-      <button onClick={() => goTo('whatif')}><SlidersHorizontal size={18} aria-hidden="true"/><span>What if?</span></button>
       <button onClick={() => setMapOpen(true)} aria-haspopup="dialog"><MapIcon size={18} aria-hidden="true"/><span>Map</span></button>
-      <button className="chat-button" onClick={() => { setFocusCommentId(undefined); setChatOpen(true); }} aria-haspopup="dialog"><MessageCircle size={18} aria-hidden="true"/><span>Chat</span>{party.messages > 0 && <b aria-label={`${party.messages} messages`}>{party.messages > 99 ? '99+' : party.messages}</b>}</button>
+      <button className="accent-button" onClick={() => setBoardOpen(true)} aria-haspopup="dialog"><Volume2 size={18} aria-hidden="true"/><span>Sounds</span></button>
     </nav>
 
     <Sheet open={mapOpen} onClose={() => setMapOpen(false)} label="Election map" wide>
@@ -439,13 +399,10 @@ function ElectionDashboard() {
       <Suspense fallback={<p className="sheet-loading">Unfolding the map…</p>}><ElectionMap races={data.races} onOpenState={openState}/></Suspense>
     </Sheet>
     <Sheet open={boardOpen} onClose={() => setBoardOpen(false)} label="The soundboard">
-      <Soundboard onClose={() => setBoardOpen(false)}/>
+      <Soundboard onClose={() => setBoardOpen(false)} locked={Boolean(final)}/>
     </Sheet>
-    <SoundPromo hidden={Boolean(sound.toast)}/>
+    <SoundPromo hidden={Boolean(sound.toast)} onGo={playFinale} cta={<><b>Sound’s on.</b> Tap to hear how it ended.</>}/>
     <EventToast toast={sound.toast} onClose={sound.dismiss} onReplay={sound.replay}/>
     <TrumpMeme/>
-    <Sheet open={chatOpen} onClose={() => setChatOpen(false)} label="The room: party chat">
-      <PartyRoom onClose={() => { setChatOpen(false); setFocusCommentId(undefined); }} focusCommentId={focusCommentId}/>
-    </Sheet>
   </div>;
 }

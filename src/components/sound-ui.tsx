@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Bell, BellOff, BellRing, Play, Volume2, VolumeX, X } from 'lucide-react';
 import { winningTiers, type LiveRace } from '../lib/election';
 import { nextClose } from '../lib/schedule';
@@ -114,12 +114,12 @@ export function SoundPin() {
 /** Sound is on by default, but browsers hold audio until the first tap on each visit. A small fixed sticker above the
  *  action bar while it's locked (no layout shift when it goes); any tap anywhere unlocks it. Hidden while a call pop-up
  *  shows (that has its own tap-to-hear button). Guests who chose “off” never see it. */
-export function SoundPromo({ hidden = false }: { hidden?: boolean }) {
+export function SoundPromo({ hidden = false, onGo, cta }: { hidden?: boolean; onGo?: () => void; cta?: ReactNode }) {
   const { effects, armed } = useSoundPrefs();
   if (!effects || armed || hidden) return null;
   return <aside className="sound-sticker" aria-label="Sound is on; tap once to start it">
-    <button className="sound-sticker-go" data-sound-toggle onClick={() => { unlockAudio(); void play('wrong'); }}>
-      <Volume2 size={18} aria-hidden="true"/><span><b>Sound’s on.</b> Tap anywhere and he can hear you.</span>
+    <button className="sound-sticker-go" data-sound-toggle onClick={() => { unlockAudio(); if (onGo) onGo(); else void play('wrong'); }}>
+      <Volume2 size={18} aria-hidden="true"/><span>{cta ?? <><b>Sound’s on.</b> Tap anywhere and he can hear you.</>}</span>
     </button>
     <button className="sound-sticker-quiet" data-sound-toggle onClick={() => { setEffects(false); track('sound_off'); }}>Keep it quiet</button>
   </aside>;
@@ -135,28 +135,26 @@ function Clip({ id, label, sub }: { id: SoundId; label: string; sub?: string }) 
   </li>;
 }
 
-export function Soundboard({ onClose }: { onClose: () => void }) {
-  const { effects, chat } = useSoundPrefs();
+export function Soundboard({ onClose, locked = false }: { onClose: () => void; locked?: boolean }) {
+  const { effects } = useSoundPrefs();
   return <section className="soundboard" aria-labelledby="soundboard-title">
-    <header className="sheet-head"><div><h2 id="soundboard-title">The soundboard</h2><p>On unless you turn it off. Sounds play only when something happens.</p></div><button className="sheet-close" onClick={onClose} aria-label="Close the soundboard"><X size={20}/></button></header>
+    <header className="sheet-head"><div><h2 id="soundboard-title">The soundboard</h2><p>Every clip the page played on election night. Tap one to hear it.</p></div><button className="sheet-close" onClick={onClose} aria-label="Close the soundboard"><X size={20}/></button></header>
     <div className={`board-switch${effects ? ' is-on' : ''}`}>
-      <div><b>{effects ? 'Sound effects are on' : 'Sound effects are off'}</b><small>{effects ? 'You’ll hear the calls as they come in, one sound per update. Tap once per visit if your browser asks.' : 'You turned it off. Turn on to hear Trump react to each call.'}</small></div>
+      <div><b>{effects ? 'Sound effects are on' : 'Sound effects are off'}</b><small>{locked ? (effects ? 'The count is locked, so nothing plays on its own anymore. The buttons below still work.' : 'You turned it off. The buttons below still play.') : effects ? 'A late call still plays its clip until the page locks. Tap once per visit if your browser asks.' : 'You turned it off. Turn on to hear Trump react to late calls.'}</small></div>
       <button className={effects ? 'text-button' : 'primary-button'} data-sound-toggle onClick={() => { if (effects) { setEffects(false); track('sound_off'); } else turnSoundOn(); }}>{effects ? 'Turn off' : <><Volume2 size={16} aria-hidden="true"/> Turn on</>}</button>
     </div>
-    <h3 className="board-heading">What makes noise · tap to preview</h3>
+    <h3 className="board-heading">What made noise · tap to play</h3>
     <ol className="board-list">
       <Clip id="wrong" label="A Democrat or independent wins" sub="Senate and governor calls, contested House calls, and every House flip"/>
-      <Clip id="youre-fired" label="Upset: our underdog wins" sub="This morning’s odds gave them under 50%"/>
+      <Clip id="youre-fired" label="Upset: our underdog wins" sub="Election-morning odds gave them under 50%"/>
       <Clip id="sad" label="A Republican wins"/>
       <Clip id="fake-news" label="The source withdraws a call"/>
       <Clip id="bell" label="Polls close somewhere"/>
-      <Clip id="sad" label="You react to a race or post in the chat" sub="Only while sound is on. Your fun makes him sad."/>
+      <Clip id="sad" label="A guest reacted or posted in the chat" sub="Only while their sound was on. Their fun made him sad."/>
     </ol>
     <h3 className="board-heading">Each new winning level (net flips, all offices)</h3>
     <ol className="board-list">{winningTiers.slice(1).map((tier, i) => <Clip key={tier.min} id={levelSounds[i + 1]} label={tier.short} sub={tier.range}/>)}</ol>
-    <h3 className="board-heading">Chat pings</h3>
-    <ol className="board-list"><Clip id="ping" label="Someone else posts in the chat" sub={chat === 'on' ? 'On, because you posted. Mute it in the chat.' : chat === 'off' ? 'Muted in the chat.' : 'Turns on after you post; mute it in the chat.'}/></ol>
-    <p className="board-fine">Calls come from civicAPI’s desk, checked every minute; a lead never makes noise. When several things happen in one update, you hear the biggest one and the pop-up says how many more. The clips are Trump’s own words, from his 2016 “tired of winning” campaign speech and other public remarks, via Myinstants, used here for parody. Each clip sends his official White House portrait (public domain) up the screen with the quote. Still quiet? Check your volume and silent switch.</p>
+    <p className="board-fine">Calls came from civicAPI’s desk, checked every minute on election night; a lead never made noise. When several things happened in one update, you heard the biggest one and the pop-up said how many more. The clips are Trump’s own words, from his 2016 “tired of winning” campaign speech and other public remarks, via Myinstants, used here for parody. Each clip sends his official White House portrait (public domain) up the screen with the quote. Still quiet? Check your volume and silent switch.</p>
   </section>;
 }
 

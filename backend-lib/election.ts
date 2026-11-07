@@ -3,6 +3,7 @@ import { mkdirSync } from 'node:fs';
 import { appendObservation } from './observations';
 import { heldBy, resultFor, scorecard, type Chamber, type Race, type Region } from '../src/lib/election';
 import { validateFeed, type Feed } from './source-validation';
+import { FREEZE_BY, freezeReason, loadFinal, writeFinal, type FinalRecord } from './final';
 
 const root = new URL('../data/', import.meta.url).pathname;
 mkdirSync(root, { recursive: true });
@@ -21,10 +22,22 @@ function corrected(race: Race): Race {
 const effectiveRaces: Race[] = [...baseline.races.map((race: Race) => ({ ...corrected(race), market: race.market ?? marketAddendum.markets[race.id] ?? null, held: heldBy(race) })), ...governorAddendum.races];
 const CHAMBERS: Chamber[] = ['Senate', 'House', 'Governor'];
 const remainingGaps = baseline.marketGaps.filter((gap: { id: string }) => !marketAddendum.markets[gap.id]);
+const finalDir = root + 'final/';
+type LiveDashboard = ReturnType<typeof liveDashboard>;
+let locked: FinalRecord<LiveDashboard> | null = await loadFinal<LiveDashboard>(finalDir);
+/** Once the count is locked, the results log is never opened again, so it can be archived. */
+const db: Database | null = locked ? null : openLog();
+function openLog() {
 const db = new Database(root + 'election.sqlite', { create: true });
 db.exec('PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS snapshots (id INTEGER PRIMARY KEY, chamber TEXT NOT NULL, observed_at TEXT NOT NULL, fetched_at TEXT NOT NULL, hash TEXT NOT NULL, payload TEXT NOT NULL, UNIQUE(chamber,hash)); CREATE TABLE IF NOT EXISTS fetch_log (id INTEGER PRIMARY KEY, chamber TEXT NOT NULL, checked_at TEXT NOT NULL, ok INTEGER NOT NULL, detail TEXT);');
 db.exec('CREATE TABLE IF NOT EXISTS observations (id INTEGER PRIMARY KEY, chamber TEXT NOT NULL, observed_at TEXT NOT NULL, fetched_at TEXT NOT NULL, hash TEXT NOT NULL, payload TEXT NOT NULL);');
 if (!(db.query('SELECT count(*) AS n FROM observations').get() as { n: number }).n) db.exec('INSERT INTO observations SELECT * FROM snapshots;');
+return db;
+}
+function log(): Database {
+  if (!db) throw new Error('The results log is closed: the count is locked.');
+  return db;
+}
 const feedIds: Record<Chamber, number> = { Senate: 87528, House: 87524, Governor: 87535 };
 const cache: Partial<Record<Chamber, { data: Feed; fetchedAt: string; error: string | null }>> = {};
 let pending: Promise<void> | null = null;
@@ -32,12 +45,12 @@ let checked = 0;
 
 function record(chamber: Chamber, data: Feed, fetchedAt: string) {
   validateFeed(data, chamber);
-  appendObservation(db, chamber, data.last_updated, fetchedAt, data);
+  appendObservation(log(), chamber, data.last_updated, fetchedAt, data);
   cache[chamber] = { data, fetchedAt, error: null };
 }
 
-for (const chamber of CHAMBERS) {
-  const saved = db.query('SELECT payload, fetched_at FROM observations WHERE chamber=? ORDER BY id DESC LIMIT 1').get(chamber) as { payload: string; fetched_at: string } | null;
+if (!locked) for (const chamber of CHAMBERS) {
+  const saved = log().query('SELECT payload, fetched_at FROM observations WHERE chamber=? ORDER BY id DESC LIMIT 1').get(chamber) as { payload: string; fetched_at: string } | null;
   if (saved) record(chamber, JSON.parse(saved.payload), saved.fetched_at);
   else if (chamber === 'Governor') cache.Governor = { data: { election_name: 'United States Governors', election_date: '2026-11-03', test_data: false, last_updated: new Date(0).toISOString(), candidates: [], region_results: {} }, fetchedAt: new Date(0).toISOString(), error: 'Waiting for the first governors update' };
   else {
@@ -72,7 +85,7 @@ async function refreshChamber(chamber: Chamber, deadline: number) {
       } catch (error) {
         if (!wave.signal.aborted) {
           message = error instanceof Error ? error.message : 'Source unavailable';
-          db.query('INSERT INTO fetch_log(chamber,checked_at,ok,detail) VALUES(?,?,0,?)').run(chamber, time, message);
+          log().query('INSERT INTO fetch_log(chamber,checked_at,ok,detail) VALUES(?,?,0,?)').run(chamber, time, message);
         }
         throw error;
       }
@@ -81,7 +94,7 @@ async function refreshChamber(chamber: Chamber, deadline: number) {
       const { data, time } = await Promise.any(tries);
       wave.abort();
       record(chamber, data, time);
-      db.query('INSERT INTO fetch_log(chamber,checked_at,ok,detail) VALUES(?,?,1,NULL)').run(chamber, time);
+      log().query('INSERT INTO fetch_log(chamber,checked_at,ok,detail) VALUES(?,?,1,NULL)').run(chamber, time);
       return;
     } catch {}
     if (deadline - Date.now() < RETRY_DELAY_MS + MIN_ATTEMPT_MS) break;
@@ -91,6 +104,7 @@ async function refreshChamber(chamber: Chamber, deadline: number) {
 }
 
 export async function refresh() {
+  if (locked) return;
   if (pending) return pending;
   if (Date.now() - checked < 60_000) return;
   checked = Date.now();
@@ -120,8 +134,28 @@ function topRepublican(id: string, region?: Region) {
   return [...candidates].filter(c => c.party === 'Republican' || seen.has(c.name)).sort((a, b) => b.votes - a.votes)[0]?.name ?? 'Republican';
 }
 
+/** Election night flagged a feed as delayed after 3 minutes; after the night it refreshes hourly and on visits. */
+const NIGHT_ENDS = '2026-11-06T12:00:00.000Z';
+const staleAfter = () => new Date().toISOString() < NIGHT_ENDS ? 180_000 : 3 * 60 * 60_000;
+const FREEZE_WRITES = process.env.NODE_ENV === 'production';
+
 export async function dashboard() {
+  if (locked) return { ...locked.dashboard, final: locked.final };
   await freshEnough();
+  const live = liveDashboard();
+  const reason = freezeReason(live.races, Date.now());
+  if (reason && FREEZE_WRITES) {
+    try {
+      const { record, path } = writeFinal(finalDir, live, reason, new Date().toISOString());
+      locked = record;
+      console.log(`Count locked (${reason}) at ${record.final.frozenAt}: ${path}; ${record.final.uncalled} races uncalled.`);
+      return { ...record.dashboard, final: record.final };
+    } catch (error) { console.error('Could not lock the final count:', error); }
+  }
+  return { ...live, final: null, freezeBy: FREEZE_BY };
+}
+
+function liveDashboard() {
   const races = effectiveRaces.map(r => {
     const region = cache[r.chamber]?.data.region_results[r.key];
     if (r.opponent && !(r.opponent === 'Eventual Nominee' && r.candidate !== 'Eventual Nominee')) return { ...r, result: resultFor(r, region) };
@@ -132,21 +166,31 @@ export async function dashboard() {
     const candidates = source.data.candidates;
     const seats = (match: (party: string) => boolean) => candidates.filter(c => match(c.party)).reduce((s, c) => s + (c.seats ?? 0), 0);
     const empty = !candidates.length && chamber === 'Governor';
-    return [chamber, { democratic: empty ? governorAddendum.notUp.democratic : seats(p => p === 'Democratic'), republican: empty ? governorAddendum.notUp.republican : seats(p => p === 'Republican'), independent: seats(p => !['Democratic', 'Republican'].includes(p)), fetchedAt: source.fetchedAt, sourceUpdatedAt: source.data.last_updated, error: source.error, stale: Date.now() - Date.parse(source.fetchedAt) > 180_000 }];
+    return [chamber, { democratic: empty ? governorAddendum.notUp.democratic : seats(p => p === 'Democratic'), republican: empty ? governorAddendum.notUp.republican : seats(p => p === 'Republican'), independent: seats(p => !['Democratic', 'Republican'].includes(p)), fetchedAt: source.fetchedAt, sourceUpdatedAt: source.data.last_updated, error: source.error, stale: Date.now() - Date.parse(source.fetchedAt) > staleAfter() }];
   }));
-  return { races, chambers, score: scorecard(races), baseline: { frozenAt: baseline.frozenAt, cutoff: baseline.cutoff, forecastSource: baseline.forecastSource, forecastUrl: baseline.forecastUrl, sources: baseline.sources, scope: baseline.scope, marketGaps: remainingGaps }, log: { snapshots: (db.query('SELECT count(*) AS n FROM observations').get() as {n: number}).n, attempts: (db.query('SELECT count(*) AS n FROM fetch_log').get() as {n: number}).n }, generatedAt: new Date().toISOString() };
+  return { races, chambers, score: scorecard(races), baseline: { frozenAt: baseline.frozenAt, cutoff: baseline.cutoff, forecastSource: baseline.forecastSource, forecastUrl: baseline.forecastUrl, sources: baseline.sources, scope: baseline.scope, marketGaps: remainingGaps }, log: logCounts(), generatedAt: new Date().toISOString() };
 }
 
+function logCounts() {
+  return { snapshots: (log().query('SELECT count(*) AS n FROM observations').get() as {n: number}).n, attempts: (log().query('SELECT count(*) AS n FROM fetch_log').get() as {n: number}).n };
+}
+
+/** Evidence download. The full log passed 1 GB, so it is no longer served whole; it is archived privately when the count locks. */
 export function auditExport() {
-  return { baseline, marketAddendum, governorAddendum, nameCorrections, snapshots: db.query('SELECT * FROM observations ORDER BY id').all(), fetches: db.query('SELECT * FROM fetch_log ORDER BY id').all(), exportedAt: new Date().toISOString(), note: 'Locally recorded source observations, not an independently timestamped audit. Source race calls are provisional, not certification.' };
+  const evidence = { baseline, marketAddendum, governorAddendum, nameCorrections, exportedAt: new Date().toISOString() };
+  const caveat = 'Locally recorded source observations, not an independently timestamped audit. Source race calls are provisional, not certification.';
+  if (locked) return { ...evidence, finalRecord: locked, note: `${caveat} This is the locked final record; the full results log is archived privately and not served.` };
+  const latest = CHAMBERS.map(chamber => log().query('SELECT * FROM observations WHERE chamber=? ORDER BY id DESC LIMIT 1').get(chamber));
+  return { ...evidence, latest, counts: logCounts(), note: `${caveat} Latest source observation per chamber only; the full log is too large to serve whole.` };
 }
 
 const globalState = globalThis as typeof globalThis & { electionTimer?: ReturnType<typeof setInterval> };
 if (globalState.electionTimer) clearInterval(globalState.electionTimer);
-if (process.env.NODE_ENV === 'production') {
+if (process.env.NODE_ENV === 'production' && !locked) {
   const timer = setInterval(() => {
-    if (new Date().toISOString() < '2026-11-06T12:00:00.000Z') void refresh();
-  }, 60_000);
+    if (locked) return clearInterval(timer);
+    void Promise.resolve(refresh()).then(() => dashboard()).catch(error => console.error('Hourly results check failed:', error));
+  }, 60 * 60_000);
   timer.unref();
   globalState.electionTimer = timer;
 }

@@ -3,24 +3,22 @@ import config from "./zosite.json";
 import { Hono } from "hono";
 import { dashboard, auditExport } from "./backend-lib/election";
 import { Database } from 'bun:sqlite';
-import { createPartyApp } from './backend-lib/party';
+import { existsSync, readdirSync } from 'node:fs';
 import { createTelemetry } from './backend-lib/telemetry';
-import { watchlistRaceIds } from './backend-lib/watchlist';
 
 // AI agents: read README.md for navigation and contribution guidance.
 type Mode = "development" | "production";
 const app = new Hono();
-const hostFile = Bun.file(new URL('./data/party-host-key.json', import.meta.url));
-let hostKey: string | undefined;
-try {
-  if (await hostFile.exists()) {
-    const key = (await hostFile.json()).key;
-    if (typeof key === 'string' && /^[A-Za-z0-9_-]{43}$/.test(key)) hostKey = key;
-  }
-} catch { console.error('Host controls unavailable: the private key file could not be read.'); }
 const telemetry = createTelemetry(new Database(new URL('./data/telemetry.sqlite', import.meta.url).pathname, { create: true }));
 app.route('/api/t', telemetry.app);
-app.route('/api/party', createPartyApp(new Database(new URL('./data/party.sqlite', import.meta.url).pathname, { create: true }), await watchlistRaceIds(), { hostKey, stats: telemetry.stats }));
+
+/** The party room closed Nov 5 at 00:00 ET and is retired: comments, handles and picks are no longer served.
+ *  Only the final per-race emoji counts remain, exported by scripts/export_reactions.ts. */
+const finalDir = new URL('./data/final/', import.meta.url).pathname;
+const reactionFile = existsSync(finalDir) ? readdirSync(finalDir).filter(f => /^reactions-\d{8}\.json$/.test(f)).sort().at(-1) : undefined;
+const finalReactions = reactionFile ? await Bun.file(finalDir + reactionFile).json() : { schema: 'tow-reactions-v1', total: 0, counts: {} };
+if (finalReactions.schema !== 'tow-reactions-v1' || typeof finalReactions.counts !== 'object') throw new Error(`Reaction counts file ${reactionFile} is not a valid tow-reactions-v1 record`);
+app.get('/api/reactions', (c) => c.json(finalReactions));
 
 const mode: Mode =
   process.env.NODE_ENV === "production" ? "production" : "development";
