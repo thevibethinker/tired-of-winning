@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mockup B — Rally Broadcast</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;0,900;1,800;1,900&family=DM+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#f3eedf;--ink:#0f1c33;--navy:#14284d;--red:#d72f27;--red-ink:#a3211b;--blue:#245cd6;--sky:#8fb2ff;--gold:#f2c14e;--muted:#535c6b;--white:#fffdf5;--display:'Barlow Condensed',sans-serif}
+*{box-sizing:border-box;margin:0}
+body{background:var(--paper);color:var(--ink);font:16px/1.45 'DM Sans',sans-serif;font-variant-numeric:tabular-nums;overflow-x:hidden}
+.mock{position:fixed;left:0;right:0;bottom:0;z-index:99;background:#111;color:#ffd84a;font:700 11px/1 ui-monospace,monospace;letter-spacing:1px;text-align:center;padding:6px}
+/* studio */
+.studio{position:relative;background:radial-gradient(120% 70% at 80% 0%,#23427a 0,var(--navy) 45%,var(--ink) 100%);color:var(--white);padding:0 0 26px;overflow:hidden}
+.studio::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(115deg,transparent 0 38px,rgba(255,255,255,.035) 38px 40px);pointer-events:none}
+.sweep{position:absolute;top:0;bottom:0;width:120px;left:-160px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);transform:skewX(-20deg);animation:sweep 5s 1s ease-in-out infinite}
+@keyframes sweep{30%,100%{left:120%}}
+.topbar{position:relative;display:flex;align-items:center;justify-content:space-between;padding:12px 16px}
+.wordmark{font:900 30px/1 var(--display);letter-spacing:-1px}.wordmark i{color:var(--red);font-style:normal;font-size:16px;vertical-align:top}
+.bug{display:flex;align-items:center;gap:6px;font:800 12px/1 'DM Sans';letter-spacing:1.4px}
+.bug b{background:var(--red);padding:5px 7px;clip-path:polygon(8% 0,100% 0,92% 100%,0 100%);animation:onair 1.6s steps(2) infinite}
+@keyframes onair{50%{background:#ff5047}}
+/* countdown plate */
+.clock{position:relative;margin:6px 0 0;display:flex;align-items:stretch}
+.clock .k{background:var(--red);padding:8px 14px 8px 16px;font:800 12px/1.1 'DM Sans';letter-spacing:1.2px;text-transform:uppercase;clip-path:polygon(0 0,100% 0,90% 100%,0 100%);padding-right:26px;display:flex;align-items:center}
+.clock .v{background:var(--white);color:var(--ink);margin-left:-10px;padding:4px 22px 4px 20px;font:900 34px/1 var(--display);clip-path:polygon(10% 0,100% 0,92% 100%,0 100%);animation:wipe .6s .2s both}
+.clock .w{align-self:center;margin-left:8px;font:700 13px/1.2 'DM Sans';color:var(--sky)}
+@keyframes wipe{from{clip-path:polygon(10% 0,10% 0,0 100%,0 100%)}}
+/* headline stack with overlapping plates */
+.stack{position:relative;margin:22px 16px 0}
+.stack h1{font:900 italic 60px/.86 var(--display);text-transform:uppercase;letter-spacing:-1px}
+.stack h1 em{font-style:inherit;color:var(--gold)}
+.breaking{position:relative;z-index:2;margin:-10px -16px 0 28px;display:flex;transform:rotate(-2deg);animation:slidein .7s .6s cubic-bezier(.2,.9,.2,1.1) both}
+.breaking span{background:var(--gold);color:var(--ink);font:900 14px/1 'DM Sans';letter-spacing:1.6px;padding:9px 12px;clip-path:polygon(6% 0,100% 0,94% 100%,0 100%)}
+.breaking strong{background:var(--white);color:var(--red);font:900 32px/1 var(--display);text-transform:uppercase;padding:4px 30px 2px 16px;margin-left:-8px;flex:1}
+@keyframes slidein{from{transform:translateX(110%) rotate(-2deg)}}
+.sub{margin:12px 0 0 28px;font-size:14px;color:#c9d6f2}
+/* scoreboard box */
+.board{position:relative;margin:26px 16px 0;display:grid;grid-template-columns:1fr 1fr;border:2px solid rgba(255,255,255,.7);background:rgba(10,20,40,.55)}
+.board .tab{position:absolute;top:-13px;left:12px;background:var(--red);font:900 13px/1 'DM Sans';letter-spacing:1.6px;padding:6px 12px;transform:skewX(-14deg)}
+.board .tab span{display:inline-block;transform:skewX(14deg)}
+.side{padding:16px 14px 10px}.side+.side{border-left:2px solid rgba(255,255,255,.25);text-align:right}
+.side b{display:block;font:900 84px/.85 var(--display);letter-spacing:-2px}
+.side small{font:800 12px/1 'DM Sans';letter-spacing:1.2px;text-transform:uppercase}
+.dem b{color:var(--sky)}.gop b{color:#ff7d74}
+.need{grid-column:1/3;border-top:2px solid rgba(255,255,255,.25);display:flex;justify-content:space-between;padding:8px 14px;font-size:13px;color:#c9d6f2}
+.need b{color:var(--white)}
+.steps{margin:18px 16px 0;display:grid;grid-template-columns:repeat(6,1fr);gap:3px}
+.steps i{height:8px;background:rgba(255,255,255,.18);transform:skewX(-20deg)}.steps i.on{background:var(--sky)}.steps i.now{background:var(--gold);height:12px;margin-top:-2px;animation:glow 1.4s ease-in-out infinite alternate}
+@keyframes glow{to{box-shadow:0 0 14px var(--gold)}}
+.steps-l{margin:6px 16px 0;font:800 12px/1 'DM Sans';letter-spacing:1.2px;text-transform:uppercase;color:var(--gold)}
+/* crawl */
+.crawlbar{position:relative;z-index:3;display:flex;background:var(--white);color:var(--ink);margin-top:-12px;border-top:3px solid var(--red);box-shadow:0 4px 0 rgba(0,0,0,.08)}
+.crawlbar .lbl{background:var(--ink);color:var(--white);font:900 13px/1 'DM Sans';letter-spacing:1.4px;padding:10px 12px;position:relative;z-index:1}
+.crawlbar .track{overflow:hidden;flex:1;display:flex;align-items:center}
+.crawlbar .crawl{display:flex;gap:30px;white-space:nowrap;font:700 14px/1 'DM Sans';animation:crawl 16s linear infinite;padding-left:12px}
+.crawl span::before{content:"■ ";color:var(--red)}
+@keyframes crawl{to{transform:translateX(-50%)}}
+/* race plates: staggered, overlapping lower-thirds */
+.group{margin:34px 0 0}
+.ghead{display:flex;align-items:center;margin:0 16px 14px}
+.ghead h2{font:900 italic 34px/1 var(--display);text-transform:uppercase}
+.ghead span{margin-left:10px;background:var(--red);color:var(--white);font:800 11px/1 'DM Sans';letter-spacing:1.2px;padding:5px 9px;transform:skewX(-14deg)}
+.plate{position:relative;margin:0 12px 0 16px;display:grid;grid-template-columns:52px 1fr auto;align-items:stretch;background:var(--white);box-shadow:0 6px 14px rgba(15,28,51,.14);animation:rise .5s both}
+.plate+.plate{margin-top:-6px}
+.plate:nth-of-type(2){margin-left:22px;animation-delay:.12s}.plate:nth-of-type(3){margin-left:10px;animation-delay:.24s}.plate:nth-of-type(4){margin-left:26px;animation-delay:.36s}
+@keyframes rise{from{transform:translateY(24px);opacity:0}}
+.plate .st{background:var(--navy);color:var(--white);font:900 26px/1 var(--display);display:grid;place-items:center;clip-path:polygon(0 0,100% 0,84% 100%,0 100%);padding-right:6px}
+.plate .who{padding:11px 10px 10px 6px}.who b{display:block;font-weight:800;font-size:15px}.who span{font-size:12px;color:var(--muted)}
+.who .mm{display:flex;gap:10px;font-size:12px;margin-top:4px;color:var(--muted)}.who .mm b{display:inline;font-size:12px;color:var(--ink)}
+.plate .ct{padding:10px 14px 8px 20px;text-align:right;font:900 26px/1 var(--display);clip-path:polygon(14% 0,100% 0,100% 100%,0 100%);display:flex;flex-direction:column;justify-content:center}
+.ct small{font:700 11px/1.2 'DM Sans';margin-top:3px}
+.ct.d{background:var(--blue);color:var(--white)}.ct.r{background:var(--red);color:var(--white)}.ct.i{background:#e3ddcb;color:var(--ink)}
+.called{position:absolute;top:-11px;right:16px;z-index:2;background:var(--gold);color:var(--ink);font:900 11px/1 'DM Sans';letter-spacing:1.4px;padding:5px 9px;transform:skewX(-14deg);animation:flash 1s 1.2s 3}
+@keyframes flash{50%{background:var(--white)}}
+.toast{position:fixed;left:12px;right:12px;bottom:96px;z-index:40;display:flex;align-items:center;gap:10px;background:var(--ink);color:var(--white);padding:10px 12px;border-left:6px solid var(--gold);font-size:14px;box-shadow:0 8px 20px rgba(0,0,0,.3);animation:toast 6s 1.5s both infinite}
+.toast b{color:var(--gold)}
+@keyframes toast{0%{transform:translateY(160%)}8%,60%{transform:translateY(0)}68%,100%{transform:translateY(160%)}}
+.dock{position:fixed;left:0;right:0;bottom:22px;z-index:30;display:grid;grid-template-columns:repeat(3,1fr) 1.2fr;background:var(--ink);color:var(--white)}
+.dock span{padding:15px 0 13px;text-align:center;font:800 13px/1 'DM Sans';letter-spacing:.4px}
+.dock .chat{background:var(--red);clip-path:polygon(12% 0,100% 0,100% 100%,0 100%)}
+.pad{height:170px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style></head><body>
+<section class="studio"><div class="sweep"></div>
+<div class="topbar"><div class="wordmark">TOW<i>★</i></div><div class="bug"><b>LIVE</b> 9:42 PM ET</div></div>
+<div class="clock"><span class="k">Next polls<br>close in</span><span class="v">0:17:42</span><span class="w">10 PM ET<br>MT · NV · UT</span></div>
+<div class="stack"><h1>Are we tired of <em>winning?</em></h1>
+<div class="breaking"><span>BREAKING</span><strong>Bigly winning</strong></div>
+<p class="sub">Not tired yet. Four more called seats to “tired.”</p></div>
+<div class="board"><div class="tab"><span>SENATE · CALLED</span></div>
+<div class="side dem"><b>52</b><small>Democrats</small></div><div class="side gop"><b>41</b><small>Republicans</small></div>
+<div class="need"><span><b>7</b> uncalled · <b>51</b> for control</span><span>Model 52.4</span></div></div>
+<div class="steps"><i class="on"></i><i class="on"></i><i class="now"></i><i></i><i></i><i></i></div>
+<p class="steps-l">Level 3 of 6 · Bigly</p>
+</section>
+<div class="crawlbar"><span class="lbl">CALLS</span><div class="track"><div class="crawl"><span>OH: Brown (civicAPI 9:31)</span><span>GA: Ossoff</span><span>KY: Barr</span><span>OH: Brown (civicAPI 9:31)</span><span>GA: Ossoff</span><span>KY: Barr</span></div></div></div>
+<section class="group"><div class="ghead"><h2>9:00 PM</h2><span>POLLS CLOSED</span></div>
+<article class="plate"><span class="called">CALLED · CIVICAPI</span><span class="st">OH</span><div class="who"><b>Sherrod Brown</b><span>vs. Jon Husted</span><div class="mm">Model <b>75%</b> Market <b>72%</b></div></div><div class="ct d">D+3.4<small>96% in</small></div></article>
+<article class="plate"><span class="st">ME</span><div class="who"><b>Troy Jackson</b><span>vs. Susan Collins</span><div class="mm">Model <b>74%</b> Market <b>73%</b></div></div><div class="ct d">D+1.8<small>Leads · 64%</small></div></article>
+<article class="plate"><span class="st">IA</span><div class="who"><b>Josh Turek</b><span>vs. Ashley Hinson</span><div class="mm">Model <b>50%</b> Market <b>54%</b></div></div><div class="ct r">R+0.6<small>Trails · 71%</small></div></article>
+<article class="plate"><span class="st">NE</span><div class="who"><b>Dan Osborn (I)</b><span>vs. Pete Ricketts</span><div class="mm">Model <b>31%</b> Market <b>32%</b></div></div><div class="ct d">+0.9<small>Leads · 58%</small></div></article>
+</section>
+<div class="pad"></div>
+<div class="toast">💬 <span><b>@aunt_deb</b> OHIO!!! 🔥🔥 &nbsp;·&nbsp; 12 new</span></div>
+<nav class="dock"><span>Races</span><span>What if</span><span>Map</span><span class="chat">Chat · 12</span></nav>
+<div class="mock">MOCKUP B · RALLY BROADCAST · SAMPLE NUMBERS, NOT RESULTS</div>
+</body></html>

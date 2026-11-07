@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import DataDemo from "./pages/data-demo";
-import DesignKitDemo from "./pages/_design";
+import { lazy, Suspense } from "react";
+import ElectionNight from "./pages/election-night";
+const DesignKitDemo = lazy(() => import("./pages/_design"));
 import { ThemeProvider } from "@/components/theme-provider";
 
 export default function App() {
@@ -8,8 +9,8 @@ export default function App() {
     <ThemeProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/_design" element={<DesignKitDemo />} />
-          <Route path="/" element={<DataDemo />} />
+          <Route path="/_design" element={<Suspense fallback={<p>Loading design kit…</p>}><DesignKitDemo /></Suspense>} />
+          <Route path="/" element={<ElectionNight />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

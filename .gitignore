@@ -1,2 +1,11 @@
 node_modules/
 dist/
+/data/party-host-key.json
+.claude/
+__pycache__/
+# Runtime databases stay private and out of the repo (results log, party room, visit counts).
+/data/*.sqlite
+/data/*.sqlite-shm
+/data/*.sqlite-wal
+# Trump audio clips are not redistributed in the public repo; see docs/sound-sources.md for their sources.
+/public/sounds/*.mp3

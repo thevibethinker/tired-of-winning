@@ -1,0 +1,111 @@
+{
+  "at": "2026-11-03T18:56:08.115Z",
+  "base": "http://localhost:51754",
+  "checks": [
+    {
+      "name": "two browsers have distinct default handles",
+      "pass": true
+    },
+    {
+      "name": "handles save in both browsers",
+      "pass": true
+    },
+    {
+      "name": "duplicate handle rejected beside the handle field",
+      "pass": true
+    },
+    {
+      "name": "new comments reach the other browser through automatic polling",
+      "pass": true
+    },
+    {
+      "name": "user content is escaped, never rendered as HTML",
+      "pass": true
+    },
+    {
+      "name": "handle persists on reload",
+      "pass": true
+    },
+    {
+      "name": "second browser cannot delete first browser message",
+      "pass": true
+    },
+    {
+      "name": "reaction from browser A reaches browser B",
+      "pass": true
+    },
+    {
+      "name": "both reactions aggregate independently",
+      "pass": true
+    },
+    {
+      "name": "two independent audience picks count once each",
+      "pass": true
+    },
+    {
+      "name": "changing a pick does not increase the voter count",
+      "pass": true
+    },
+    {
+      "name": "crowd sentiment explicitly distinguished from forecasts",
+      "pass": true
+    },
+    {
+      "name": "race controls fit at 360",
+      "pass": true
+    },
+    {
+      "name": "party fits at 360",
+      "pass": true
+    },
+    {
+      "name": "race controls fit at 390",
+      "pass": true
+    },
+    {
+      "name": "party fits at 390",
+      "pass": true
+    },
+    {
+      "name": "race controls fit at 768",
+      "pass": true
+    },
+    {
+      "name": "party fits at 768",
+      "pass": true
+    },
+    {
+      "name": "race controls fit at 1440",
+      "pass": true
+    },
+    {
+      "name": "party fits at 1440",
+      "pass": true
+    },
+    {
+      "name": "failed refresh shows stale social state honestly",
+      "pass": true
+    },
+    {
+      "name": "posting disabled while social updates unavailable",
+      "pass": true
+    },
+    {
+      "name": "outage recovery preserves identity and messages",
+      "pass": true
+    },
+    {
+      "name": "long unbroken comment cannot overflow mobile",
+      "pass": true
+    },
+    {
+      "name": "composer supports keyboard navigation",
+      "pass": true
+    },
+    {
+      "name": "no browser exceptions",
+      "pass": true
+    }
+  ],
+  "errors": []
+}

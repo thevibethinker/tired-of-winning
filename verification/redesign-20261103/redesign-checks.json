@@ -1,0 +1,286 @@
+{
+  "synthetic": "Election responses intercepted in the browser; clocks faked; nothing written to staging or production.",
+  "checks": [
+    {
+      "name": "phone360: pre-results ticker counts down to 6 p.m. Kentucky",
+      "pass": true
+    },
+    {
+      "name": "phone360: no horizontal overflow",
+      "pass": true
+    },
+    {
+      "name": "phone360: 15 contested Senate races by default",
+      "pass": true
+    },
+    {
+      "name": "phone360: contested list starts at 7 p.m. (Kentucky is not contested)",
+      "pass": true
+    },
+    {
+      "name": "phone360: rows say polls open before closing",
+      "pass": true
+    },
+    {
+      "name": "phone360: pre-results to-do line visible",
+      "pass": true
+    },
+    {
+      "name": "phone360: buttons meet 44px targets",
+      "pass": true
+    },
+    {
+      "name": "phone360: All shows every Senate race",
+      "pass": true
+    },
+    {
+      "name": "phone360: House \"All\" is capped at 60 with a show-more control",
+      "pass": true
+    },
+    {
+      "name": "phone360: candidate search works",
+      "pass": true
+    },
+    {
+      "name": "phone360: map opens as a sheet",
+      "pass": true
+    },
+    {
+      "name": "phone360: tapping a safe state closes the map and opens its race",
+      "pass": true
+    },
+    {
+      "name": "phone360: 7:45 p.m. ticker points to 8 p.m.",
+      "pass": true
+    },
+    {
+      "name": "phone360: closed groups say so; FL/NH group says most closed",
+      "pass": true
+    },
+    {
+      "name": "phone360: 8 p.m. group is flagged next",
+      "pass": true
+    },
+    {
+      "name": "phone360: lead is labeled not called",
+      "pass": true
+    },
+    {
+      "name": "phone360: call names the winner",
+      "pass": true
+    },
+    {
+      "name": "phone360: scorecard names the leader",
+      "pass": true
+    },
+    {
+      "name": "phone360: hero to-do hides once votes exist",
+      "pass": true
+    },
+    {
+      "name": "phone360: expanded race shows votes, close note and picks",
+      "pass": true
+    },
+    {
+      "name": "phone360: 59 seats reaches No More Winning",
+      "pass": true
+    },
+    {
+      "name": "phone360: #party deep link opens the room",
+      "pass": true
+    },
+    {
+      "name": "phone360: Escape closes the room and clears the hash",
+      "pass": true
+    },
+    {
+      "name": "phone390: pre-results ticker counts down to 6 p.m. Kentucky",
+      "pass": true
+    },
+    {
+      "name": "phone390: no horizontal overflow",
+      "pass": true
+    },
+    {
+      "name": "phone390: 15 contested Senate races by default",
+      "pass": true
+    },
+    {
+      "name": "phone390: contested list starts at 7 p.m. (Kentucky is not contested)",
+      "pass": true
+    },
+    {
+      "name": "phone390: rows say polls open before closing",
+      "pass": true
+    },
+    {
+      "name": "phone390: pre-results to-do line visible",
+      "pass": true
+    },
+    {
+      "name": "phone390: buttons meet 44px targets",
+      "pass": true
+    },
+    {
+      "name": "phone390: All shows every Senate race",
+      "pass": true
+    },
+    {
+      "name": "phone390: House \"All\" is capped at 60 with a show-more control",
+      "pass": true
+    },
+    {
+      "name": "phone390: candidate search works",
+      "pass": true
+    },
+    {
+      "name": "phone390: map opens as a sheet",
+      "pass": true
+    },
+    {
+      "name": "phone390: tapping a safe state closes the map and opens its race",
+      "pass": true
+    },
+    {
+      "name": "phone390: 7:45 p.m. ticker points to 8 p.m.",
+      "pass": true
+    },
+    {
+      "name": "phone390: closed groups say so; FL/NH group says most closed",
+      "pass": true
+    },
+    {
+      "name": "phone390: 8 p.m. group is flagged next",
+      "pass": true
+    },
+    {
+      "name": "phone390: lead is labeled not called",
+      "pass": true
+    },
+    {
+      "name": "phone390: call names the winner",
+      "pass": true
+    },
+    {
+      "name": "phone390: scorecard names the leader",
+      "pass": true
+    },
+    {
+      "name": "phone390: hero to-do hides once votes exist",
+      "pass": true
+    },
+    {
+      "name": "phone390: expanded race shows votes, close note and picks",
+      "pass": true
+    },
+    {
+      "name": "phone390: 59 seats reaches No More Winning",
+      "pass": true
+    },
+    {
+      "name": "phone390: #party deep link opens the room",
+      "pass": true
+    },
+    {
+      "name": "phone390: Escape closes the room and clears the hash",
+      "pass": true
+    },
+    {
+      "name": "desktop: pre-results ticker counts down to 6 p.m. Kentucky",
+      "pass": true
+    },
+    {
+      "name": "desktop: no horizontal overflow",
+      "pass": true
+    },
+    {
+      "name": "desktop: 15 contested Senate races by default",
+      "pass": true
+    },
+    {
+      "name": "desktop: contested list starts at 7 p.m. (Kentucky is not contested)",
+      "pass": true
+    },
+    {
+      "name": "desktop: rows say polls open before closing",
+      "pass": true
+    },
+    {
+      "name": "desktop: pre-results to-do line visible",
+      "pass": true
+    },
+    {
+      "name": "desktop: buttons meet 44px targets",
+      "pass": true
+    },
+    {
+      "name": "desktop: All shows every Senate race",
+      "pass": true
+    },
+    {
+      "name": "desktop: House \"All\" is capped at 60 with a show-more control",
+      "pass": true
+    },
+    {
+      "name": "desktop: candidate search works",
+      "pass": true
+    },
+    {
+      "name": "desktop: map opens as a sheet",
+      "pass": true
+    },
+    {
+      "name": "desktop: tapping a safe state closes the map and opens its race",
+      "pass": true
+    },
+    {
+      "name": "desktop: 7:45 p.m. ticker points to 8 p.m.",
+      "pass": true
+    },
+    {
+      "name": "desktop: closed groups say so; FL/NH group says most closed",
+      "pass": true
+    },
+    {
+      "name": "desktop: 8 p.m. group is flagged next",
+      "pass": true
+    },
+    {
+      "name": "desktop: lead is labeled not called",
+      "pass": true
+    },
+    {
+      "name": "desktop: call names the winner",
+      "pass": true
+    },
+    {
+      "name": "desktop: scorecard names the leader",
+      "pass": true
+    },
+    {
+      "name": "desktop: hero to-do hides once votes exist",
+      "pass": true
+    },
+    {
+      "name": "desktop: expanded race shows votes, close note and picks",
+      "pass": true
+    },
+    {
+      "name": "desktop: 59 seats reaches No More Winning",
+      "pass": true
+    },
+    {
+      "name": "desktop: #party deep link opens the room",
+      "pass": true
+    },
+    {
+      "name": "desktop: Escape closes the room and clears the hash",
+      "pass": true
+    },
+    {
+      "name": "no page errors",
+      "pass": true
+    }
+  ],
+  "errors": []
+}

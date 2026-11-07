@@ -1,0 +1,687 @@
+{
+  "createdAt": "2026-11-03T18:03:17.997207+00:00",
+  "provenance": "con_47LNC7Xg2RhZRrRT",
+  "kind": "synthetic election-night rehearsal",
+  "pass": true,
+  "backend": {
+    "synthetic": true,
+    "checks": [
+      {
+        "name": "waiting is not a tie, loss or score",
+        "pass": true
+      },
+      {
+        "name": "repeated viewers do not trigger upstream requests inside 60 seconds",
+        "pass": true
+      },
+      {
+        "name": "concurrent viewers share one refresh for both chambers",
+        "pass": true
+      },
+      {
+        "name": "Senate and House leads stay uncalled",
+        "pass": true
+      },
+      {
+        "name": "leads do not increase secured seats",
+        "pass": true
+      },
+      {
+        "name": "a later batch can reverse the lead",
+        "pass": true
+      },
+      {
+        "name": "calls update chamber totals and matched market scoring",
+        "pass": true
+      },
+      {
+        "name": "identical upstream payloads are not recorded twice",
+        "pass": true
+      },
+      {
+        "name": "withdrawn call removes the seat and provisional score",
+        "pass": true
+      },
+      {
+        "name": "corrected winner updates score and opposite party total",
+        "pass": true
+      },
+      {
+        "name": "independent call is tracked without assuming a caucus",
+        "pass": true
+      },
+      {
+        "name": "http failure preserves last good results and warns",
+        "pass": true
+      },
+      {
+        "name": "http failure does not stop House updates",
+        "pass": true
+      },
+      {
+        "name": "json failure preserves last good results and warns",
+        "pass": true
+      },
+      {
+        "name": "json failure does not stop House updates",
+        "pass": true
+      },
+      {
+        "name": "timeout failure preserves last good results and warns",
+        "pass": true
+      },
+      {
+        "name": "timeout failure does not stop House updates",
+        "pass": true
+      },
+      {
+        "name": "test rejected without changing saved results",
+        "pass": true
+      },
+      {
+        "name": "wrong-election rejected without changing saved results",
+        "pass": true
+      },
+      {
+        "name": "negative-votes rejected without changing saved results",
+        "pass": true
+      },
+      {
+        "name": "missing-races rejected without changing saved results",
+        "pass": true
+      },
+      {
+        "name": "two-winners rejected without changing saved results",
+        "pass": true
+      },
+      {
+        "name": "valid recovery clears warning and staleness",
+        "pass": true
+      },
+      {
+        "name": "51 called seats produces WINNING.",
+        "pass": true
+      },
+      {
+        "name": "52 called seats produces BIGLY WINNING.",
+        "pass": true
+      },
+      {
+        "name": "54 called seats produces SO MUCH WINNING.",
+        "pass": true
+      },
+      {
+        "name": "56 called seats produces TIRED OF WINNING.",
+        "pass": true
+      },
+      {
+        "name": "59 called seats produces NO MORE WINNING.",
+        "pass": true
+      },
+      {
+        "name": "frozen forecast and market probabilities survive every stage",
+        "pass": true
+      },
+      {
+        "name": "original server code and source evidence unchanged",
+        "pass": true
+      },
+      {
+        "name": "all simulated failures are logged",
+        "pass": true
+      },
+      {
+        "name": "audit keeps both the original call and its retraction",
+        "pass": true
+      }
+    ],
+    "frames": 22,
+    "interceptedRequests": 46,
+    "runtime": "/home/.z/workspaces/con_47LNC7Xg2RhZRrRT/rehearsal-20261103-b/isolated-runtime",
+    "at": "2026-11-03T18:00:23.223Z"
+  },
+  "browser": {
+    "synthetic": true,
+    "base": "http://localhost:51754",
+    "checks": [
+      {
+        "name": "zero vote waiting state appears",
+        "pass": true
+      },
+      {
+        "name": "automatic screen refresh: First batch: Democratic leads, no calls",
+        "pass": true
+      },
+      {
+        "name": "Texas status: First batch: Democratic leads, no calls",
+        "pass": true
+      },
+      {
+        "name": "map color: First batch: Democratic leads, no calls",
+        "pass": true
+      },
+      {
+        "name": "warning state: First batch: Democratic leads, no calls",
+        "pass": true
+      },
+      {
+        "name": "automatic screen refresh: Second batch: Texas lead reverses",
+        "pass": true
+      },
+      {
+        "name": "Texas status: Second batch: Texas lead reverses",
+        "pass": true
+      },
+      {
+        "name": "map color: Second batch: Texas lead reverses",
+        "pass": true
+      },
+      {
+        "name": "warning state: Second batch: Texas lead reverses",
+        "pass": true
+      },
+      {
+        "name": "automatic screen refresh: First calls: Texas Senate and one House seat",
+        "pass": true
+      },
+      {
+        "name": "Texas status: First calls: Texas Senate and one House seat",
+        "pass": true
+      },
+      {
+        "name": "map color: First calls: Texas Senate and one House seat",
+        "pass": true
+      },
+      {
+        "name": "warning state: First calls: Texas Senate and one House seat",
+        "pass": true
+      },
+      {
+        "name": "race card status after First calls: Texas Senate and one House seat",
+        "pass": true
+      },
+      {
+        "name": "candidate vote counts after First calls: Texas Senate and one House seat",
+        "pass": true
+      },
+      {
+        "name": "provisional scoring after First calls: Texas Senate and one House seat",
+        "pass": true
+      },
+      {
+        "name": "automatic screen refresh: Repeated batch: no duplicate observation",
+        "pass": true
+      },
+      {
+        "name": "Texas status: Repeated batch: no duplicate observation",
+        "pass": true
+      },
+      {
+        "name": "map color: Repeated batch: no duplicate observation",
+        "pass": true
+      },
+      {
+        "name": "warning state: Repeated batch: no duplicate observation",
+        "pass": true
+      },
+      {
+        "name": "automatic screen refresh: Retraction: Texas Senate returns to uncalled",
+        "pass": true
+      },
+      {
+        "name": "Texas status: Retraction: Texas Senate returns to uncalled",
+        "pass": true
+      },
+      {
+        "name": "map color: Retraction: Texas Senate returns to uncalled",
+        "pass": true
+      },
+      {
+        "name": "warning state: Retraction: Texas Senate returns to uncalled",
+        "pass": true
+      },
+      {
+        "name": "race card status after Retraction: Texas Senate returns to uncalled",
+        "pass": true
+      },
+      {
+        "name": "candidate vote counts after Retraction: Texas Senate returns to uncalled",
+        "pass": true
+      },
+      {
+        "name": "provisional scoring after Retraction: Texas Senate returns to uncalled",
+        "pass": true
+      },
+      {
+        "name": "automatic screen refresh: Correction: Texas Senate called Republican",
+        "pass": true
+      },
+      {
+        "name": "Texas status: Correction: Texas Senate called Republican",
+        "pass": true
+      },
+      {
+        "name": "map color: Correction: Texas Senate called Republican",
+        "pass": true
+      },
+      {
+        "name": "warning state: Correction: Texas Senate called Republican",
+        "pass": true
+      },
+      {
+        "name": "race card status after Correction: Texas Senate called Republican",
+        "pass": true
+      },
+      {
+        "name": "candidate vote counts after Correction: Texas Senate called Republican",
+        "pass": true
+      },
+      {
+        "name": "provisional scoring after Correction: Texas Senate called Republican",
+        "pass": true
+      },
+      {
+        "name": "automatic screen refresh: Independent win: separate from Democratic control",
+        "pass": true
+      },
+      {
+        "name": "Texas status: Independent win: separate from Democratic control",
+        "pass": true
+      },
+      {
+        "name": "map color: Independent win: separate from Democratic control",
+        "pass": true
+      },
+      {
+        "name": "warning state: Independent win: separate from Democratic control",
+        "pass": true
+      },
+      {
+        "name": "automatic screen refresh: Feed failure: http",
+        "pass": true
+      },
+      {
+        "name": "Texas status: Feed failure: http",
+        "pass": true
+      },
+      {
+        "name": "map color: Feed failure: http",
+        "pass": true
+      },
+      {
+        "name": "warning state: Feed failure: http",
+        "pass": true
+      },
+      {
+        "name": "automatic screen refresh: Feed failure: json",
+        "pass": true
+      },
+      {
+        "name": "Texas status: Feed failure: json",
+        "pass": true
+      },
+      {
+        "name": "map color: Feed failure: json",
+        "pass": true
+      },
+      {
+        "name": "warning state: Feed failure: json",
+        "pass": true
+      },
+      {
+        "name": "automatic screen refresh: Feed failure: timeout",
+        "pass": true
+      },
+      {
+        "name": "Texas status: Feed failure: timeout",
+        "pass": true
+      },
+      {
+        "name": "map color: Feed failure: timeout",
+        "pass": true
+      },
+      {
+        "name": "warning state: Feed failure: timeout",
+        "pass": true
+      },
+      {
+        "name": "automatic screen refresh: Rejected input: test",
+        "pass": true
+      },
+      {
+        "name": "Texas status: Rejected input: test",
+        "pass": true
+      },
+      {
+        "name": "map color: Rejected input: test",
+        "pass": true
+      },
+      {
+        "name": "warning state: Rejected input: test",
+        "pass": true
+      },
+      {
+        "name": "automatic screen refresh: Rejected input: wrong-election",
+        "pass": true
+      },
+      {
+        "name": "Texas status: Rejected input: wrong-election",
+        "pass": true
+      },
+      {
+        "name": "map color: Rejected input: wrong-election",
+        "pass": true
+      },
+      {
+        "name": "warning state: Rejected input: wrong-election",
+        "pass": true
+      },
+      {
+        "name": "automatic screen refresh: Rejected input: negative-votes",
+        "pass": true
+      },
+      {
+        "name": "Texas status: Rejected input: negative-votes",
+        "pass": true
+      },
+      {
+        "name": "map color: Rejected input: negative-votes",
+        "pass": true
+      },
+      {
+        "name": "warning state: Rejected input: negative-votes",
+        "pass": true
+      },
+      {
+        "name": "automatic screen refresh: Rejected input: missing-races",
+        "pass": true
+      },
+      {
+        "name": "Texas status: Rejected input: missing-races",
+        "pass": true
+      },
+      {
+        "name": "map color: Rejected input: missing-races",
+        "pass": true
+      },
+      {
+        "name": "warning state: Rejected input: missing-races",
+        "pass": true
+      },
+      {
+        "name": "automatic screen refresh: Rejected input: two-winners",
+        "pass": true
+      },
+      {
+        "name": "Texas status: Rejected input: two-winners",
+        "pass": true
+      },
+      {
+        "name": "map color: Rejected input: two-winners",
+        "pass": true
+      },
+      {
+        "name": "warning state: Rejected input: two-winners",
+        "pass": true
+      },
+      {
+        "name": "automatic screen refresh: Recovery: valid feed resumes",
+        "pass": true
+      },
+      {
+        "name": "Texas status: Recovery: valid feed resumes",
+        "pass": true
+      },
+      {
+        "name": "map color: Recovery: valid feed resumes",
+        "pass": true
+      },
+      {
+        "name": "warning state: Recovery: valid feed resumes",
+        "pass": true
+      },
+      {
+        "name": "automatic screen refresh: Synthetic calls: 51 D-caucus seats",
+        "pass": true
+      },
+      {
+        "name": "Texas status: Synthetic calls: 51 D-caucus seats",
+        "pass": true
+      },
+      {
+        "name": "map color: Synthetic calls: 51 D-caucus seats",
+        "pass": true
+      },
+      {
+        "name": "warning state: Synthetic calls: 51 D-caucus seats",
+        "pass": true
+      },
+      {
+        "name": "51 seats displayed in live board",
+        "pass": true
+      },
+      {
+        "name": "51 seats activate correct mood",
+        "pass": true
+      },
+      {
+        "name": "automatic screen refresh: Synthetic calls: 52 D-caucus seats",
+        "pass": true
+      },
+      {
+        "name": "Texas status: Synthetic calls: 52 D-caucus seats",
+        "pass": true
+      },
+      {
+        "name": "map color: Synthetic calls: 52 D-caucus seats",
+        "pass": true
+      },
+      {
+        "name": "warning state: Synthetic calls: 52 D-caucus seats",
+        "pass": true
+      },
+      {
+        "name": "52 seats displayed in live board",
+        "pass": true
+      },
+      {
+        "name": "52 seats activate correct mood",
+        "pass": true
+      },
+      {
+        "name": "automatic screen refresh: Synthetic calls: 54 D-caucus seats",
+        "pass": true
+      },
+      {
+        "name": "Texas status: Synthetic calls: 54 D-caucus seats",
+        "pass": true
+      },
+      {
+        "name": "map color: Synthetic calls: 54 D-caucus seats",
+        "pass": true
+      },
+      {
+        "name": "warning state: Synthetic calls: 54 D-caucus seats",
+        "pass": true
+      },
+      {
+        "name": "54 seats displayed in live board",
+        "pass": true
+      },
+      {
+        "name": "54 seats activate correct mood",
+        "pass": true
+      },
+      {
+        "name": "automatic screen refresh: Synthetic calls: 56 D-caucus seats",
+        "pass": true
+      },
+      {
+        "name": "Texas status: Synthetic calls: 56 D-caucus seats",
+        "pass": true
+      },
+      {
+        "name": "map color: Synthetic calls: 56 D-caucus seats",
+        "pass": true
+      },
+      {
+        "name": "warning state: Synthetic calls: 56 D-caucus seats",
+        "pass": true
+      },
+      {
+        "name": "56 seats displayed in live board",
+        "pass": true
+      },
+      {
+        "name": "56 seats activate correct mood",
+        "pass": true
+      },
+      {
+        "name": "automatic screen refresh: Synthetic calls: 59 D-caucus seats",
+        "pass": true
+      },
+      {
+        "name": "Texas status: Synthetic calls: 59 D-caucus seats",
+        "pass": true
+      },
+      {
+        "name": "map color: Synthetic calls: 59 D-caucus seats",
+        "pass": true
+      },
+      {
+        "name": "warning state: Synthetic calls: 59 D-caucus seats",
+        "pass": true
+      },
+      {
+        "name": "59 seats displayed in live board",
+        "pass": true
+      },
+      {
+        "name": "59 seats activate correct mood",
+        "pass": true
+      },
+      {
+        "name": "all live updates preserve frozen map colors",
+        "pass": true
+      },
+      {
+        "name": "automatic screen refresh: Synthetic calls: 59 D-caucus seats",
+        "pass": true
+      },
+      {
+        "name": "browser HTTP failure retains last successful count",
+        "pass": true
+      },
+      {
+        "name": "automatic screen refresh: Synthetic calls: 59 D-caucus seats",
+        "pass": true
+      },
+      {
+        "name": "browser HTTP recovery clears banner",
+        "pass": true
+      },
+      {
+        "name": "scenario can diverge from the live count",
+        "pass": true
+      },
+      {
+        "name": "scenario leaves live count intact",
+        "pass": true
+      },
+      {
+        "name": "Tonight with populated results fits 360px",
+        "pass": true
+      },
+      {
+        "name": "Map with populated results fits 360px",
+        "pass": true
+      },
+      {
+        "name": "Races with populated results fits 360px",
+        "pass": true
+      },
+      {
+        "name": "Receipts with populated results fits 360px",
+        "pass": true
+      },
+      {
+        "name": "Tonight with populated results fits 390px",
+        "pass": true
+      },
+      {
+        "name": "Map with populated results fits 390px",
+        "pass": true
+      },
+      {
+        "name": "Races with populated results fits 390px",
+        "pass": true
+      },
+      {
+        "name": "Receipts with populated results fits 390px",
+        "pass": true
+      },
+      {
+        "name": "Tonight with populated results fits 768px",
+        "pass": true
+      },
+      {
+        "name": "Map with populated results fits 768px",
+        "pass": true
+      },
+      {
+        "name": "Races with populated results fits 768px",
+        "pass": true
+      },
+      {
+        "name": "Receipts with populated results fits 768px",
+        "pass": true
+      },
+      {
+        "name": "Tonight with populated results fits 1440px",
+        "pass": true
+      },
+      {
+        "name": "Map with populated results fits 1440px",
+        "pass": true
+      },
+      {
+        "name": "Races with populated results fits 1440px",
+        "pass": true
+      },
+      {
+        "name": "Receipts with populated results fits 1440px",
+        "pass": true
+      },
+      {
+        "name": "no JavaScript exceptions",
+        "pass": true
+      }
+    ],
+    "errors": [],
+    "interceptedResponses": 24,
+    "at": "2026-11-03T18:01:29.277Z"
+  },
+  "existingTests": {
+    "passed": 25,
+    "assertions": 237
+  },
+  "typecheck": "passed",
+  "testedFilesMatchProduction": {
+    "backend-lib/election.ts": true,
+    "backend-lib/observations.ts": true,
+    "backend-lib/source-validation.ts": true,
+    "src/lib/election.ts": true,
+    "src/lib/map.ts": true,
+    "src/components/election-map.tsx": true,
+    "src/pages/election-night.tsx": true
+  },
+  "productionCodeChanged": false,
+  "syntheticResultsWrittenToRealDatabase": false,
+  "limits": [
+    "Does not verify civicAPI actual election-night delivery delay or race-call correctness",
+    "Does not test AP or DDHQ access",
+    "Not a high-concurrency load test",
+    "Successful HTTP fetches with unchanged upstream timestamps are visible in the source ledger; the stale flag measures retrieval age, not independently verified source freshness"
+  ],
+  "harnessNote": "The first run only advanced Date.now; corrected the rehearsal clock to advance Date construction too, then all checks passed. No application defect or patch resulted."
+}

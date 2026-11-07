@@ -1,0 +1,72 @@
+.sound-pin{--r:-7deg;margin-left:auto;width:max(54px,3.375rem);height:max(54px,3.375rem);border-radius:50%;display:grid;place-content:center;justify-items:center;gap:1px;line-height:1;text-align:center;background:var(--white);color:var(--red-ink);border:3px solid var(--red);outline:2px solid var(--ink);box-shadow:inset 0 -4px 0 rgba(0,0,0,.08),2px 3px 0 var(--ink);transform:rotate(var(--r));position:relative}
+.sound-pin small{font-size:.625rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase}
+.sound-pin b{font-family:var(--display);font-weight:800;font-size:1.0625rem;text-transform:uppercase}
+.sound-pin:not(.is-on)::after{content:"";position:absolute;inset:6px;border-radius:50%;border:2px dashed rgba(215,47,39,.45);pointer-events:none}
+.sound-pin.is-on{background:var(--blue);color:var(--white);border-color:var(--white)}
+.sound-pin.is-waiting{background:var(--sticker-gold);color:var(--ink);border-color:var(--white)}
+.sound-pin+.live-pin{margin-left:0}
+.sound-pin:not(.is-on){animation:wiggle .9s .9s cubic-bezier(.36,.07,.19,.97) both}
+@keyframes wiggle{0%,100%{transform:rotate(var(--r))}20%{transform:rotate(calc(var(--r) - 12deg)) scale(1.08)}40%{transform:rotate(calc(var(--r) + 10deg)) scale(1.08)}60%{transform:rotate(calc(var(--r) - 6deg))}80%{transform:rotate(calc(var(--r) + 3deg))}}
+
+
+
+.event-toast-region{position:fixed;z-index:30;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom));display:flex;justify-content:center;pointer-events:none}
+.event-toast{--r:-1.5deg;pointer-events:auto;position:relative;width:min(440px,100%);padding:12px 48px 12px 14px;background:var(--ink);color:var(--white);border:3px solid var(--white);outline:2.5px solid var(--ink);box-shadow:4px 6px 0 rgba(23,38,65,.3);transform:rotate(var(--r));animation:slap0 .42s cubic-bezier(.16,1,.3,1) both}
+.event-toast.is-win,.event-toast.is-upset{background:var(--blue)}
+.event-toast.is-level{background:var(--sticker-gold);color:var(--ink)}
+.event-toast.is-loss{background:var(--red-ink)}
+.event-toast-kind{font-size:var(--text-caption);font-weight:800;letter-spacing:1px;text-transform:uppercase;opacity:.9}
+.event-toast-title{font-family:var(--display);font-weight:800;font-size:1.5rem;line-height:1.02;margin-top:3px;text-transform:uppercase;overflow-wrap:anywhere}
+.event-toast-quote{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:var(--text-secondary);font-weight:700}
+.event-toast-cta{display:inline-flex;align-items:center;gap:6px;min-height:40px;margin-top:6px;padding:4px 10px;background:var(--white);color:var(--ink)!important;font-size:var(--text-secondary);font-weight:800;text-align:left;box-shadow:2px 2px 0 rgba(0,0,0,.3)}
+.event-toast-close{position:absolute;top:4px;right:4px;width:44px;height:44px;display:grid;place-items:center;color:inherit!important}
+
+.soundboard .sheet-head p{display:block}
+.board-switch{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 14px;background:var(--white);border:2px solid var(--ink);box-shadow:3px 4px 0 rgba(23,38,65,.15)}
+.board-switch.is-on{border-color:var(--blue)}
+.board-switch b{display:block;font-family:var(--display);font-weight:800;font-size:1.375rem;text-transform:uppercase;line-height:1}
+.board-switch small{display:block;font-size:var(--text-secondary);color:var(--muted);margin-top:3px}
+.board-switch .primary-button{background:var(--red);color:var(--white)!important}
+.board-heading{font-size:var(--text-caption);font-weight:800;letter-spacing:1.2px;text-transform:uppercase;margin:20px 0 8px}
+.board-list{list-style:none;padding:0;display:grid;gap:6px}
+.board-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--rule)}
+.board-event b{display:block;font-size:var(--text-secondary);font-weight:800;line-height:1.25}
+.board-event small{display:block;font-size:var(--text-caption);color:var(--muted);line-height:1.3;margin-top:1px}
+.board-play{display:flex;align-items:center;gap:8px;min-height:44px;padding:6px 10px;background:var(--white);border:1.5px solid var(--ink);border-radius:999px;box-shadow:2px 2px 0 var(--ink);text-align:left;font-size:var(--text-caption);font-weight:700;line-height:1.25}
+.board-play svg{flex-shrink:0;color:var(--red)}
+.board-play:hover{background:var(--paper)}
+.board-play:active{transform:translateY(2px);box-shadow:0 0 0 var(--ink)}
+.board-fine{font-size:var(--text-caption);color:var(--muted);margin-top:16px;line-height:1.45}
+
+.chat-ping-row{display:flex;align-items:center;gap:8px;margin:2px 0 10px;padding:6px 10px;border:1px dashed var(--rule);font-size:var(--text-caption);font-weight:600;color:var(--muted)}
+.chat-ping-row.is-on{border-color:var(--blue);color:var(--ink)}
+.chat-ping-row span{flex:1;min-width:0}
+.chat-ping-row button{min-height:40px;padding:0 10px;font-weight:800;text-decoration:underline;text-underline-offset:3px;color:var(--ink)}
+
+@media (min-width:820px){
+  .event-toast-region{left:auto;right:var(--gutter);bottom:20px;width:420px}
+}
+@media (max-width:380px){.board-row{grid-template-columns:1fr}.sound-pin{width:50px;height:50px}}
+@media (prefers-reduced-motion:reduce){.sound-pin,.event-toast,.sound-sticker{animation:none!important}}
+
+.trump-meme-layer{position:fixed;inset:0;z-index:35;width:auto;height:auto;max-width:none;max-height:none;margin:0;padding:0;border:0;background:transparent;color:inherit;overflow:visible;pointer-events:none}
+.trump-meme-layer:empty{display:none}
+.trump-meme-layer::backdrop{display:none}
+.trump-meme{--r0:-14deg;--r1:-5deg;--r2:3deg;position:absolute;bottom:0;right:14px;width:clamp(148px,40vw,196px);margin:0;background:var(--white);border:5px solid var(--white);outline:2.5px solid var(--ink);box-shadow:4px 6px 0 rgba(23,38,65,.32);animation:meme-rise 3.4s cubic-bezier(.22,1,.36,1) both;will-change:transform,opacity}
+.trump-meme.is-left{right:auto;left:14px;--r0:14deg;--r1:5deg;--r2:-3deg}
+.trump-meme img{display:block;width:100%;height:auto;aspect-ratio:1}
+.trump-meme figcaption{position:absolute;inset:6px 6px 8px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;gap:4px;text-align:center;font-family:var(--display);font-weight:900;font-size:2.125rem;line-height:.92;letter-spacing:.3px;text-transform:uppercase;color:#fff;overflow-wrap:anywhere;text-shadow:2px 2px 0 #000,-2px 2px 0 #000,2px -2px 0 #000,-2px -2px 0 #000,0 2px 0 #000,0 -2px 0 #000,2px 0 0 #000,-2px 0 0 #000}
+.trump-meme figcaption span:only-child{margin-top:auto}
+.trump-meme.is-long figcaption{font-size:1.125rem;line-height:1}
+@keyframes meme-rise{0%{transform:translateY(calc(100% + 30px)) rotate(var(--r0))}22%{transform:translateY(-34vh) rotate(var(--r1))}30%{transform:translateY(-30vh) rotate(var(--r2))}72%{transform:translateY(-38vh) rotate(var(--r1));opacity:1}100%{transform:translateY(-92vh) rotate(var(--r2));opacity:0}}
+@media (min-width:820px){.trump-meme{width:200px}}
+@media (prefers-reduced-motion:reduce){.trump-meme{transform:translateY(-34vh) rotate(var(--r1))}}
+
+/* Tap-to-start sticker (sound on by default, audio locked until the first tap). Fixed, so nothing shifts when it goes. */
+.sound-sticker{--r:-1.5deg;position:fixed;z-index:29;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom));display:flex;align-items:stretch;background:var(--sticker-gold);color:var(--ink);border:2.5px solid var(--ink);box-shadow:3px 4px 0 var(--ink);transform:rotate(var(--r));animation:sticker-in .42s .6s cubic-bezier(.16,1,.3,1) both}
+.sound-sticker-go{flex:1;display:flex;align-items:center;gap:10px;min-height:52px;padding:8px 12px;text-align:left;font-size:var(--text-secondary);line-height:1.25}
+.sound-sticker-go b{font-family:var(--display);font-weight:900;font-size:1.125rem;text-transform:uppercase;letter-spacing:.3px}
+.sound-sticker-quiet{flex:none;min-width:44px;padding:0 12px;border-left:2px dashed var(--ink);font-size:var(--text-caption);font-weight:800;text-transform:uppercase;letter-spacing:.6px}
+.sound-sticker-quiet:hover,.sound-sticker-go:hover{background:rgba(255,253,245,.35)}
+@keyframes sticker-in{from{opacity:0;transform:translateY(24px) rotate(var(--r))}to{opacity:1;transform:rotate(var(--r))}}
+@media (min-width:820px){.sound-sticker{left:auto;right:var(--gutter);bottom:20px;width:420px}}

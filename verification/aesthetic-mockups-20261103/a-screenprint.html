@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mockup A — Screenprint Rally</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;0,900;1,900&family=DM+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#f3eedf;--ink:#172641;--red:#d72f27;--red-ink:#a3211b;--blue:#245cd6;--muted:#535c6b;--rule:#d6d0bf;--white:#fffdf5;--display:'Barlow Condensed',sans-serif}
+*{box-sizing:border-box;margin:0}
+body{background:var(--paper);color:var(--ink);font:16px/1.45 'DM Sans',sans-serif;font-variant-numeric:tabular-nums;overflow-x:hidden;
+ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 .3 0 0 0 0 .25 0 0 0 0 .15 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+.mock{position:fixed;left:0;right:0;bottom:0;z-index:99;background:#111;color:#ffd84a;font:700 11px/1 ui-monospace,monospace;letter-spacing:1px;text-align:center;padding:6px}
+/* ticker: tilted band overlapping masthead */
+.ticker{position:sticky;top:0;z-index:20;margin:0 -12px;transform:rotate(-1.6deg);transform-origin:left;background:var(--red);color:var(--white);padding:9px 24px 8px;box-shadow:0 3px 0 var(--ink);overflow:hidden}
+.ticker .row{display:flex;align-items:baseline;gap:10px}
+.ticker small{font:800 11px/1 'DM Sans';letter-spacing:1.4px;text-transform:uppercase}
+.ticker b{font:900 30px/1 var(--display);letter-spacing:.5px}
+.crawl{display:flex;gap:28px;white-space:nowrap;font:700 13px/1.2 'DM Sans';margin-top:4px;animation:crawl 14s linear infinite}
+.crawl span::before{content:"★ ";color:#ffd0cc}
+@keyframes crawl{to{transform:translateX(-50%)}}
+.mast{display:flex;align-items:center;justify-content:space-between;padding:22px 18px 6px}
+.wordmark{font:900 34px/1 var(--display);letter-spacing:-1.5px}.wordmark i{color:var(--red);font-style:normal;font-size:18px;vertical-align:top}
+.live{font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center}.live i{width:8px;height:8px;border-radius:50%;background:#1d6949;animation:blink 2s infinite}
+@keyframes blink{50%{opacity:.25}}
+/* hero with misregistered ink */
+.hero{position:relative;padding:14px 18px 0}
+.hero h1{font:900 64px/.86 var(--display);text-transform:uppercase;letter-spacing:-1.5px;color:var(--ink);text-shadow:3px 3px 0 rgba(36,92,214,.55);position:relative;z-index:1}
+.hero h1 em{font-style:normal;color:var(--red);text-shadow:-3px 2px 0 rgba(36,92,214,.45)}
+.stars{position:absolute;right:6px;top:-4px;font-size:22px;color:var(--red);letter-spacing:4px;transform:rotate(12deg);opacity:.9}
+/* placard answer overlapping the headline */
+.placard{position:relative;z-index:2;margin:-4px 14px 0 70px;transform:rotate(-3deg);background:var(--white);border:3px solid var(--ink);padding:12px 14px 12px;box-shadow:7px 7px 0 var(--red);animation:sway 5s ease-in-out infinite}
+.placard::before,.placard::after{content:"";position:absolute;top:-7px;width:16px;height:4px;background:#8a8f99;border-radius:1px}.placard::before{left:14px}.placard::after{right:14px}
+@keyframes sway{50%{transform:rotate(-1.6deg) translateY(-2px)}}
+.placard small{font:800 11px/1 'DM Sans';letter-spacing:1.3px;text-transform:uppercase;color:var(--muted)}
+.placard strong{display:block;font:900 46px/.9 var(--display);text-transform:uppercase;color:var(--red);margin-top:6px}
+.placard p{font-size:14px;margin-top:4px}
+/* seat number: halftone fill + sign overlapping */
+.seats{position:relative;margin:34px 18px 0;display:grid;grid-template-columns:auto 1fr;align-items:end;gap:6px}
+.big{font:900 168px/.78 var(--display);letter-spacing:-6px;color:transparent;
+ background:radial-gradient(circle,var(--blue) 42%,transparent 44%) 0 0/7px 7px,var(--blue);-webkit-background-clip:text;background-clip:text;-webkit-text-stroke:3px var(--ink);position:relative}
+.big::after{content:"52";position:absolute;inset:0;color:transparent;-webkit-text-stroke:2px var(--red);transform:translate(5px,4px);opacity:.55;pointer-events:none}
+.seat-side{padding-bottom:10px;padding-left:8px}
+.seat-side .tag{display:inline-block;background:var(--ink);color:var(--white);font:800 12px/1 'DM Sans';letter-spacing:1.2px;text-transform:uppercase;padding:6px 8px;transform:rotate(2deg)}
+.seat-side p{font-size:14px;margin-top:8px;line-height:1.3}.seat-side p b{font:800 22px/1 var(--display)}
+.gop{color:var(--red-ink)}
+.strip{position:relative;margin:14px 18px 0;height:22px;background:repeating-linear-gradient(90deg,#e3ddcb 0 6px,#ddd6c2 6px 7px);border:2px solid var(--ink)}
+.strip .d{position:absolute;left:0;top:0;bottom:0;width:52%;background:var(--blue);animation:grow 1.6s cubic-bezier(.2,.8,.2,1) both}
+.strip .r{position:absolute;right:0;top:0;bottom:0;width:41%;background:var(--red)}
+.strip .tick{position:absolute;left:51%;top:-9px;bottom:-9px;width:3px;background:var(--ink)}
+.strip .tick::after{content:"51";position:absolute;top:-16px;left:-6px;font:800 11px/1 'DM Sans'}
+@keyframes grow{from{width:0}}
+/* meter: stacked tilted placards, current pops over neighbours */
+.meter{display:flex;margin:30px 10px 0;padding:0 4px}
+.meter li{list-style:none;flex:1;position:relative;background:var(--white);border:2px solid var(--ink);padding:8px 4px 6px;font:800 12px/1 var(--display);text-transform:uppercase;text-align:center;margin-left:-2px;white-space:nowrap}
+.meter li:nth-child(odd){transform:rotate(-2deg)}.meter li:nth-child(even){transform:rotate(1.5deg) translateY(3px)}
+.meter li.past{background:var(--ink);color:var(--white)}
+.meter li.now{z-index:3;background:var(--red);color:var(--white);transform:scale(1.14) rotate(-4deg) translateY(-6px);box-shadow:4px 4px 0 var(--ink);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.2) rotate(-3deg) translateY(-8px)}}
+.meter-note{margin:16px 18px 0;font-size:14px;font-weight:600}
+/* races */
+.group{margin:44px 0 0;position:relative}
+.group h2{margin:0 18px;font:900 40px/.9 var(--display);text-transform:uppercase;display:flex;align-items:baseline;gap:10px}
+.group h2 small{font:800 11px/1 'DM Sans';letter-spacing:1.2px;color:var(--white);background:var(--ink);padding:5px 7px;transform:rotate(-2deg)}
+.race{position:relative;margin:0 18px;border-bottom:1.5px solid var(--ink);padding:14px 0 12px;display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center}
+.race:first-of-type{border-top:3px solid var(--ink);margin-top:12px}
+.st{font:900 26px/1 var(--display)}
+.who b{display:block;font-weight:700}.who span{font-size:13px;color:var(--muted)}
+.count{text-align:right;font:800 24px/1 var(--display)}.count small{display:block;font:600 11px/1.2 'DM Sans';color:var(--muted);margin-top:3px}
+.d{color:var(--blue)}.r{color:var(--red-ink)}
+.mm{grid-column:2/4;display:flex;gap:14px;font-size:12px;color:var(--muted)}.mm b{color:var(--ink)}
+.bar{grid-column:1/4;height:6px;background:#e3ddcb;position:relative;overflow:hidden}.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--blue);animation:grow 1.4s .3s both}
+/* rubber stamp overlapping the row */
+.stamp{position:absolute;right:-4px;top:60px;z-index:4;font:900 italic 25px/.9 var(--display);text-transform:uppercase;color:var(--red);border:4px double var(--red);padding:5px 9px 3px;transform:rotate(-12deg);background:rgba(243,238,223,.55);mix-blend-mode:multiply;
+ -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.55' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.6 2'/%3E%3C/filter%3E%3Crect width='90' height='90' filter='url(%23n)'/%3E%3C/svg%3E");
+ animation:slam .5s 1s cubic-bezier(.3,1.6,.5,1) both}
+.stamp small{display:block;font:800 10px/1.1 'DM Sans';letter-spacing:1px;font-style:normal}
+@keyframes slam{from{transform:scale(2.6) rotate(-30deg);opacity:0}}
+.race.called .who,.race.called .st{opacity:.92}
+/* chat sticker bubbles peeking in from the edge, over the list */
+.bubble{position:absolute;z-index:6;right:-10px;background:var(--ink);color:var(--white);font-size:13px;font-weight:600;padding:8px 12px;border-radius:14px 14px 2px 14px;box-shadow:3px 3px 0 var(--red);max-width:200px;transform:rotate(3deg);animation:peek 7s ease-in-out infinite}
+.bubble b{color:#ffb4ae}
+@keyframes peek{0%,8%{transform:translateX(120%) rotate(3deg)}14%,70%{transform:translateX(0) rotate(3deg)}78%,100%{transform:translateX(120%) rotate(3deg)}}
+.react{position:absolute;right:40px;font-size:24px;animation:float 3.2s ease-out infinite;z-index:5}
+@keyframes float{from{transform:translateY(0) scale(.6);opacity:0}20%{opacity:1}to{transform:translateY(-90px) scale(1.2) rotate(15deg);opacity:0}}
+.dock{position:fixed;left:12px;right:12px;bottom:34px;z-index:30;display:grid;grid-template-columns:repeat(3,1fr) 1.2fr;background:var(--white);border:2.5px solid var(--ink);box-shadow:5px 5px 0 var(--ink)}
+.dock span{padding:12px 0;text-align:center;font:800 13px/1 'DM Sans';border-right:1.5px solid var(--rule)}
+.dock .chat{background:var(--red);color:var(--white);position:relative}
+.dock .chat i{position:absolute;top:-10px;right:-8px;background:var(--ink);color:#fff;font:800 11px/1 'DM Sans';padding:4px 6px;border-radius:10px;font-style:normal;transform:rotate(8deg)}
+.pad{height:150px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style></head><body>
+<div class="ticker"><div class="row"><small>Next polls close in</small><b>0:17:42</b></div>
+<div class="crawl"><span>10:00 PM ET · MT · NV · UT</span><span>OH called for Brown (civicAPI)</span><span>ME: Jackson leads, 64% in</span><span>10:00 PM ET · MT · NV · UT</span><span>OH called for Brown (civicAPI)</span><span>ME: Jackson leads, 64% in</span></div></div>
+<header class="mast"><div class="wordmark">TOW<i>★</i></div><div class="live"><i></i>Updated 9:42 PM ET</div></header>
+<section class="hero"><div class="stars">★ ★ ★</div><h1>Are we tired of <em>winning?</em></h1>
+<div class="placard"><small>Tonight · called seats only</small><strong>Bigly winning.</strong><p>Not tired yet. Four more called seats to “tired.”</p></div></section>
+<section class="seats"><div class="big">52</div><div class="seat-side"><span class="tag">Senate · called</span><p><b>Dem</b> seats<br><b class="gop">41</b> GOP · <b>7</b> uncalled</p></div></section>
+<div class="strip"><i class="d"></i><i class="r"></i><i class="tick"></i></div>
+<ol class="meter"><li class="past">Warm</li><li class="past">Win</li><li class="now">Bigly</li><li>So much</li><li>Tired</li><li>No more</li></ol>
+<p class="meter-note">Model expected 52.4 Dem seats. Market, 8 a.m.: 51.9.</p>
+<section class="group"><h2>9:00 PM <small>Polls closed</small></h2>
+<div class="bubble" style="top:-26px">@aunt_deb <b>OHIO!!!</b> 🔥🔥</div>
+<article class="race called"><span class="st">OH</span><div class="who"><b>Sherrod Brown</b><span>vs. Jon Husted</span></div><div class="count d">D+3.4<small>96% in</small></div><div class="mm">Model <b>75%</b> Market <b>72%</b></div><div class="bar"><i style="width:51%"></i></div><div class="stamp">Called<small>civicAPI · 9:31</small></div></article>
+<article class="race"><span class="st">ME</span><div class="who"><b>Troy Jackson</b><span>vs. Susan Collins</span></div><div class="count d">D+1.8<small>Leads · 64% in</small></div><div class="mm">Model <b>74%</b> Market <b>73%</b></div><div class="bar"><i style="width:50.6%"></i></div><span class="react" style="top:30px">🎉</span></article>
+<article class="race"><span class="st">IA</span><div class="who"><b>Josh Turek</b><span>vs. Ashley Hinson</span></div><div class="count r">R+0.6<small>Trails · 71% in</small></div><div class="mm">Model <b>50%</b> Market <b>54%</b></div><div class="bar"><i style="width:49.4%"></i></div></article>
+<article class="race"><span class="st">NE</span><div class="who"><b>Dan Osborn <span>(I)</span></b><span>vs. Pete Ricketts</span></div><div class="count d">+0.9<small>Leads · 58% in</small></div><div class="mm">Model <b>31%</b> Market <b>32%</b></div><div class="bar"><i style="width:50.2%"></i></div></article>
+</section>
+<div class="pad"></div>
+<nav class="dock"><span>Races</span><span>What if</span><span>Map</span><span class="chat">Chat<i>12</i></span></nav>
+<div class="mock">MOCKUP A · SCREENPRINT RALLY · SAMPLE NUMBERS, NOT RESULTS</div>
+</body></html>

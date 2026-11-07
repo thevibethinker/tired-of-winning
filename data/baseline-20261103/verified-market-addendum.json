@@ -1,0 +1,49 @@
+{
+  "verifiedAt": "2026-11-03T15:40:10.173955+00:00",
+  "markets": {
+    "senate-de": {
+      "probability": 0.9885,
+      "observedAt": "2026-11-03T12:59:28+00:00",
+      "retrievedAt": "2026-11-03T15:40:09.607657+00:00",
+      "source": "Polymarket",
+      "question": "Will the Democrats win the Delaware Senate race in 2026?",
+      "url": "https://polymarket.com/event/delaware-senate-election-winner",
+      "marketId": "630679",
+      "tokenId": "109467029375682717672947466588331781838347232688418556926634334189471462678711",
+      "identityEvidence": "Only Democratic candidate in civicAPI frozen roster: Chris Coons; accented names normalized."
+    },
+    "senate-mt": {
+      "probability": 0.089,
+      "observedAt": "2026-11-03T12:59:30+00:00",
+      "retrievedAt": "2026-11-03T15:40:09.803484+00:00",
+      "source": "Polymarket",
+      "question": "Will an Independent win the Montana Senate race in 2026?",
+      "url": "https://polymarket.com/event/montana-senate-election-winner",
+      "marketId": "630833",
+      "tokenId": "29340710087203628054916881063653310634997647642374537159652441277893390730162",
+      "identityEvidence": "Only Independent candidate in civicAPI frozen roster: Seth Bodnar; accented names normalized."
+    },
+    "senate-ne": {
+      "probability": 0.315,
+      "observedAt": "2026-11-03T12:59:29+00:00",
+      "retrievedAt": "2026-11-03T15:40:09.999675+00:00",
+      "source": "Polymarket",
+      "question": "Will an independent win the Nebraska Senate race in 2026?",
+      "url": "https://polymarket.com/event/nebraska-senate-election-winner",
+      "marketId": "634893",
+      "tokenId": "47975366268282823322598946778919483335780002591367838795894307024076579116518",
+      "identityEvidence": "Only Independent candidate in civicAPI frozen roster: Dan  Osborn; accented names normalized."
+    },
+    "senate-nm": {
+      "probability": 0.9945,
+      "observedAt": "2026-11-03T12:59:29+00:00",
+      "retrievedAt": "2026-11-03T15:40:10.172324+00:00",
+      "source": "Polymarket",
+      "question": "Will the Democrats win the New Mexico Senate race in 2026?",
+      "url": "https://polymarket.com/event/new-mexico-senate-election-winner",
+      "marketId": "630870",
+      "tokenId": "86827974851753312617441915824618617861250657564707166327567168877893121374182",
+      "identityEvidence": "Only Democratic candidate in civicAPI frozen roster: Ben Ray Luj\u00e1n; accented names normalized."
+    }
+  }
+}

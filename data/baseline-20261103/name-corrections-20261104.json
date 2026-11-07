@@ -1,0 +1,20 @@
+{
+  "created": "2026-11-04",
+  "createdAt": "2026-11-04T03:50:00Z",
+  "provenance": "con_47LNC7Xg2RhZRrRT (election night, V asked to debug and represent contested races well)",
+  "purpose": "Name corrections so live results match civicAPI's ballot names. baseline.json is untouched; the server applies these on top and refuses to start if a 'from' value no longer matches the baseline.",
+  "source": "civicAPI race 87524 (U.S. House) candidate names, retrieved 2026-11-04T03:40Z. Before the fix these races showed 'Candidate identity could not be matched safely'.",
+  "corrections": [
+    { "id": "house-tn-07", "field": "candidate", "from": "Joshua Sales", "to": "Darden Copeland", "why": "Split Ticket listed Joshua Sales; civicAPI's only Democratic candidate is Darden Copeland. The model's win chance is read as the Democratic nominee's. Not independently verified beyond civicAPI." },
+    { "id": "house-tx-32", "field": "candidate", "from": "Dan Barros", "to": "Dan Barrios", "why": "Spelling (ballot name)." },
+    { "id": "house-tx-12", "field": "candidate", "from": "Angela Rodriguez", "to": "Angela Rodriguez Prilliman", "why": "Full ballot name." },
+    { "id": "house-mn-04", "field": "opponent", "from": "Paul Wiksom", "to": "Paul Wikstrom", "why": "Spelling (ballot name)." },
+    { "id": "house-az-03", "field": "opponent", "from": "Nicholas Glenn", "to": "Jacob Parkman", "why": "civicAPI's Republican candidate; Nicholas Glenn is not on its ballot." },
+    { "id": "house-co-06", "field": "opponent", "from": "Mel Tewahade", "to": "Jason Clark", "why": "civicAPI's Republican candidate; Mel Tewahade is not on its ballot." },
+    { "id": "house-ca-11", "field": "candidate", "from": "Scott Weiner/Connie Chan", "to": "Scott Wiener/Connie Chan", "why": "Spelling (ballot name)." }
+  ],
+  "notes": [
+    "South Dakota governor: civicAPI's 03:12Z-03:30Z figures (Ahlers 2,823 vs Rhoden 1,701 at 1.18%) looked party-swapped against same-precinct Senate/House counts. By 03:40Z the source showed Rhoden 52,450 vs Ahlers 27,291 at 20.74%, so no hold was applied. Logged here as a source anomaly.",
+    "Louisiana 03-06 list 'Eventual Nominee' against multi-candidate fields from both parties; there is no single matchup, so they stay unavailable with that reason. LA-02's 'Eventual Nominee' opponent is now compared against the leading Republican by votes."
+  ]
+}

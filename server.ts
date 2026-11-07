@@ -1,12 +1,26 @@
 import { serveStatic } from "hono/bun";
-import type { ViteDevServer } from "vite";
-import { createServer as createViteServer } from "vite";
 import config from "./zosite.json";
 import { Hono } from "hono";
+import { dashboard, auditExport } from "./backend-lib/election";
+import { Database } from 'bun:sqlite';
+import { createPartyApp } from './backend-lib/party';
+import { createTelemetry } from './backend-lib/telemetry';
+import { watchlistRaceIds } from './backend-lib/watchlist';
 
 // AI agents: read README.md for navigation and contribution guidance.
 type Mode = "development" | "production";
 const app = new Hono();
+const hostFile = Bun.file(new URL('./data/party-host-key.json', import.meta.url));
+let hostKey: string | undefined;
+try {
+  if (await hostFile.exists()) {
+    const key = (await hostFile.json()).key;
+    if (typeof key === 'string' && /^[A-Za-z0-9_-]{43}$/.test(key)) hostKey = key;
+  }
+} catch { console.error('Host controls unavailable: the private key file could not be read.'); }
+const telemetry = createTelemetry(new Database(new URL('./data/telemetry.sqlite', import.meta.url).pathname, { create: true }));
+app.route('/api/t', telemetry.app);
+app.route('/api/party', createPartyApp(new Database(new URL('./data/party.sqlite', import.meta.url).pathname, { create: true }), await watchlistRaceIds(), { hostKey, stats: telemetry.stats }));
 
 const mode: Mode =
   process.env.NODE_ENV === "production" ? "production" : "development";
@@ -15,12 +29,17 @@ const mode: Mode =
  * Add any API routes here.
  */
 app.get("/api/hello-zo", (c) => c.json({ msg: "Hello from Zo" }));
+app.get('/api/election', async (c) => {
+  c.header('Cache-Control', 'no-store');
+  return c.json(await dashboard());
+});
+app.get('/api/receipts', (c) => {
+  c.header('Content-Disposition', 'attachment; filename="tired-of-winning-receipts.json"');
+  c.header('Cache-Control', 'no-store');
+  return c.json(auditExport());
+});
 
-if (mode === "production") {
-  configureProduction(app);
-} else {
-  await configureDevelopment(app);
-}
+configureProduction(app);
 
 /**
  * Determine port based on mode. In production, use the published_port if available.
@@ -61,72 +80,4 @@ function configureProduction(app: Hono) {
 
     return serveStatic({ path: "./dist/index.html" })(c, next);
   });
-}
-
-/**
- * Configure routing for development builds.
- *
- * - Boots Vite in middleware mode for transforms.
- * - Static files from `public/` are served at root paths (matching Vite convention).
- * - Mirrors production routing semantics so SPA routes behave consistently.
- */
-async function configureDevelopment(app: Hono): Promise<ViteDevServer> {
-  const vite = await createViteServer({
-    server: { middlewareMode: true, hmr: false, ws: false },
-    appType: "custom",
-  });
-
-  app.use("*", async (c, next) => {
-    if (c.req.path.startsWith("/api/")) return next();
-    if (c.req.path === "/favicon.ico") return c.redirect("/favicon.svg", 302);
-
-    const url = c.req.path;
-    try {
-      if (url === "/" || url === "/index.html") {
-        let template = await Bun.file("./index.html").text();
-        template = await vite.transformIndexHtml(url, template);
-        return c.html(template, {
-          headers: { "Cache-Control": "no-store, must-revalidate" },
-        });
-      }
-
-      const publicFile = Bun.file(`./public${url}`);
-      if (await publicFile.exists()) {
-        const stat = await publicFile.stat();
-        if (stat && !stat.isDirectory()) {
-          return new Response(publicFile, {
-            headers: { "Cache-Control": "no-store, must-revalidate" },
-          });
-        }
-      }
-
-      let result;
-      try {
-        result = await vite.transformRequest(url);
-      } catch {
-        result = null;
-      }
-
-      if (result) {
-        return new Response(result.code, {
-          headers: {
-            "Content-Type": "application/javascript",
-            "Cache-Control": "no-store, must-revalidate",
-          },
-        });
-      }
-
-      let template = await Bun.file("./index.html").text();
-      template = await vite.transformIndexHtml("/", template);
-      return c.html(template, {
-        headers: { "Cache-Control": "no-store, must-revalidate" },
-      });
-    } catch (error) {
-      vite.ssrFixStacktrace(error as Error);
-      console.error(error);
-      return c.text("Internal Server Error", 500);
-    }
-  });
-
-  return vite;
 }
