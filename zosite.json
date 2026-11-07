@@ -1,0 +1,15 @@
+{
+  "name": "tired-of-winning-staging",
+  "local_port": 51754,
+  "entrypoint": "bun run dev",
+  "publish": {
+    "label": "tired-of-winning-staging",
+    "type": "http",
+    "entrypoint": "bun run prod",
+    "published_port": 54365,
+    "env": {
+      "NODE_ENV": "production",
+      "ZO_CLIENT_IDENTITY_TOKEN": "none"
+    }
+  }
+}
