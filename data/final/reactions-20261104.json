@@ -1,0 +1,72 @@
+{
+ "schema": "tow-reactions-v1",
+ "exportedAt": "2026-11-07T22:35:48.766Z",
+ "roomClosedAt": "2026-11-05T05:00:00.000Z",
+ "source": "Party room emoji reactions (one per browser per race), counted after the room closed. Browser identities are not verified people.",
+ "emojis": [
+  {
+   "emoji": "🔥",
+   "label": "On fire"
+  },
+  {
+   "emoji": "💙",
+   "label": "Love it"
+  },
+  {
+   "emoji": "👀",
+   "label": "Watching"
+  },
+  {
+   "emoji": "😬",
+   "label": "Nervous"
+  },
+  {
+   "emoji": "🎉",
+   "label": "Celebrating"
+  },
+  {
+   "emoji": "😴",
+   "label": "Exhausted"
+  }
+ ],
+ "total": 19,
+ "counts": {
+  "house-tx-21": {
+   "😬": 1
+  },
+  "senate-fl": {
+   "🎉": 1,
+   "😬": 1
+  },
+  "senate-ga": {
+   "🎉": 1,
+   "💙": 1
+  },
+  "senate-ia": {
+   "🎉": 1,
+   "💙": 1
+  },
+  "senate-mi": {
+   "🔥": 2
+  },
+  "senate-nh": {
+   "🎉": 1,
+   "😴": 1
+  },
+  "senate-oh": {
+   "🔥": 1,
+   "😴": 1
+  },
+  "senate-sc": {
+   "🎉": 1,
+   "👀": 2,
+   "🔥": 1
+  },
+  "senate-tx": {
+   "💙": 1
+  },
+  "senate-va": {
+   "💙": 1
+  }
+ }
+}

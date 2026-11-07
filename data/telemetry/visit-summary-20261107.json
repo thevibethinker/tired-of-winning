@@ -1,0 +1,249 @@
+{
+ "schema": "tow-telemetry-v1",
+ "exportedAt": "2026-11-07T23:10:32.605Z",
+ "first": "2026-11-03T21:13:20.677Z",
+ "last": "2026-11-07T22:04:47.782Z",
+ "method": "Random per-browser IDs chosen by the page, renumbered here as v01, v02, ... in order of first visit. No IPs, user agents, handles, cookies or URLs were ever collected. Browsers with Global Privacy Control sent nothing. One person on two devices counts twice; a cleared browser counts as new.",
+ "kinds": {
+  "view": "page opened",
+  "ping": "page still open and visible (once a minute)",
+  "sound_on": "sound switched on",
+  "sound_off": "sound switched off",
+  "chat_open": "party room opened",
+  "map_open": "map opened",
+  "soundboard_open": "soundboard opened"
+ },
+ "totals": {
+  "events": 934,
+  "visitors": 60,
+  "views": 259
+ },
+ "peak": {
+  "visitors": 8,
+  "window": "2 minutes",
+  "startsAtEt": "2026-11-03 22:16"
+ },
+ "byEventKind": {
+  "view": {
+   "events": 259,
+   "visitors": 60
+  },
+  "chat_open": {
+   "events": 28,
+   "visitors": 18
+  },
+  "ping": {
+   "events": 515,
+   "visitors": 21
+  },
+  "sound_on": {
+   "events": 116,
+   "visitors": 25
+  },
+  "sound_off": {
+   "events": 10,
+   "visitors": 4
+  },
+  "map_open": {
+   "events": 5,
+   "visitors": 4
+  },
+  "soundboard_open": {
+   "events": 1,
+   "visitors": 1
+  }
+ },
+ "visitorsByDevice": {
+  "phone": 52,
+  "desktop": 7,
+  "tablet": 3
+ },
+ "visitorsBySource": {
+  "(direct)": 52,
+  "instagram.com": 8
+ },
+ "byDayEt": {
+  "2026-11-03": {
+   "visitors": 49,
+   "views": 181
+  },
+  "2026-11-04": {
+   "visitors": 22,
+   "views": 66
+  },
+  "2026-11-05": {
+   "visitors": 5,
+   "views": 6
+  },
+  "2026-11-06": {
+   "visitors": 4,
+   "views": 4
+  },
+  "2026-11-07": {
+   "visitors": 2,
+   "views": 2
+  }
+ },
+ "byHourEt": {
+  "2026-11-03 16:00": {
+   "visitors": 6,
+   "views": 7
+  },
+  "2026-11-03 17:00": {
+   "visitors": 3,
+   "views": 3
+  },
+  "2026-11-03 18:00": {
+   "visitors": 3,
+   "views": 5
+  },
+  "2026-11-03 19:00": {
+   "visitors": 7,
+   "views": 7
+  },
+  "2026-11-03 20:00": {
+   "visitors": 5,
+   "views": 13
+  },
+  "2026-11-03 21:00": {
+   "visitors": 15,
+   "views": 39
+  },
+  "2026-11-03 22:00": {
+   "visitors": 28,
+   "views": 66
+  },
+  "2026-11-03 23:00": {
+   "visitors": 9,
+   "views": 41
+  },
+  "2026-11-04 00:00": {
+   "visitors": 4,
+   "views": 17
+  },
+  "2026-11-04 01:00": {
+   "visitors": 5,
+   "views": 11
+  },
+  "2026-11-04 02:00": {
+   "visitors": 3,
+   "views": 3
+  },
+  "2026-11-04 04:00": {
+   "visitors": 1,
+   "views": 1
+  },
+  "2026-11-04 05:00": {
+   "visitors": 2,
+   "views": 2
+  },
+  "2026-11-04 06:00": {
+   "visitors": 3,
+   "views": 8
+  },
+  "2026-11-04 07:00": {
+   "visitors": 5,
+   "views": 5
+  },
+  "2026-11-04 08:00": {
+   "visitors": 1,
+   "views": 1
+  },
+  "2026-11-04 09:00": {
+   "visitors": 2,
+   "views": 1
+  },
+  "2026-11-04 10:00": {
+   "visitors": 3,
+   "views": 3
+  },
+  "2026-11-04 11:00": {
+   "visitors": 3,
+   "views": 3
+  },
+  "2026-11-04 12:00": {
+   "visitors": 1,
+   "views": 1
+  },
+  "2026-11-04 13:00": {
+   "visitors": 2,
+   "views": 2
+  },
+  "2026-11-04 14:00": {
+   "visitors": 1,
+   "views": 1
+  },
+  "2026-11-04 15:00": {
+   "visitors": 1,
+   "views": 0
+  },
+  "2026-11-04 16:00": {
+   "visitors": 3,
+   "views": 2
+  },
+  "2026-11-04 17:00": {
+   "visitors": 1,
+   "views": 1
+  },
+  "2026-11-04 18:00": {
+   "visitors": 2,
+   "views": 1
+  },
+  "2026-11-04 19:00": {
+   "visitors": 1,
+   "views": 1
+  },
+  "2026-11-04 21:00": {
+   "visitors": 1,
+   "views": 0
+  },
+  "2026-11-04 22:00": {
+   "visitors": 1,
+   "views": 1
+  },
+  "2026-11-04 23:00": {
+   "visitors": 1,
+   "views": 1
+  },
+  "2026-11-05 00:00": {
+   "visitors": 1,
+   "views": 1
+  },
+  "2026-11-05 06:00": {
+   "visitors": 1,
+   "views": 1
+  },
+  "2026-11-05 07:00": {
+   "visitors": 2,
+   "views": 1
+  },
+  "2026-11-05 09:00": {
+   "visitors": 2,
+   "views": 2
+  },
+  "2026-11-05 18:00": {
+   "visitors": 1,
+   "views": 1
+  },
+  "2026-11-06 06:00": {
+   "visitors": 1,
+   "views": 1
+  },
+  "2026-11-06 12:00": {
+   "visitors": 2,
+   "views": 2
+  },
+  "2026-11-06 17:00": {
+   "visitors": 1,
+   "views": 1
+  },
+  "2026-11-07 08:00": {
+   "visitors": 1,
+   "views": 1
+  },
+  "2026-11-07 17:00": {
+   "visitors": 1,
+   "views": 1
+  }
+ }
+}

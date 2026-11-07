@@ -1,7 +1,7 @@
 ---
 created: 2026-11-03
 last_edited: 2026-11-07
-version: 2.0
+version: 2.1
 provenance: con_47LNC7Xg2RhZRrRT; rewritten for the public repo when the site was frozen (election-night notes moved to docs/election-night-log.md)
 ---
 # Tired of Winning?
@@ -40,14 +40,37 @@ Everything frozen before polls opened lives in `data/baseline-20261103/` with re
 
 `backend-lib/final.ts` locks the count once every race with live data has a source call, or at midnight ET ending Friday Nov 20, 2026, whichever comes first. Until then the server checks civicAPI hourly and on visits. At the lock it writes `data/final/final-results-<date>.json` (written once, never overwritten). From then on the server serves that file and never opens the results log again. Races still uncalled at the lock stay uncalled; they are never guessed.
 
-`data/final/reactions-20261104.json` holds the party room's final emoji counts per race (counts only), exported by `scripts/export_reactions.ts`.
+When the lock lands, a follow-up job copies the locked record into this repo as `data/final/final-results-<date>.json`, together with a compressed copy of the complete results log (`data/archive/election-log-final-<date>.sqlite.xz`).
+
+## The data
+
+Everything the page recorded, kept for posterity:
+
+| File | What it is |
+|---|---|
+| `data/archive/election-log-through-20261107.sqlite.xz` | The complete results log through Nov 7: every civicAPI Senate, House and governor feed that changed (10,065 snapshots from Oct 23 to Nov 7) and every fetch attempt with its outcome (13,249, including the night's 502s and timeouts). 4.6 MB compressed, 1.4 GB as SQLite. |
+| `data/final/reactions-20261104.json` | The party room's final emoji counts per race (counts only), exported by `scripts/export_reactions.ts` |
+| `data/telemetry/visit-events-20261107.csv` | Every visit event: 934 events from 60 browsers, Nov 3–7 |
+| `data/telemetry/visit-summary-20261107.json` | Totals, peak, devices, sources, and visitors by day and hour (ET) |
+
+To read the log:
+
+```bash
+xz -dk data/archive/election-log-through-20261107.sqlite.xz
+sqlite3 data/archive/election-log-through-20261107.sqlite \
+  "select chamber, observed_at, length(payload) from observations order by id desc limit 5"
+```
+
+`observations` holds each changed feed (`payload` is civicAPI's JSON, unmodified); `fetch_log` holds each attempt (`ok`, error `detail`). The `.sha256` files check the compressed file and the decompressed database. civicAPI's data is free to reuse with attribution: results by [civicAPI](https://civicapi.org).
+
+The visit counter only ever stored a random ID the page picked for each browser, the event (page opened, still open, sound on or off, map or room opened), a device class (phone, tablet, desktop) and the referring site. No IP addresses, user agents, handles or URLs. The export replaces each random ID with a visitor number (v01, v02, ...) in order of first visit; `scripts/export_telemetry.ts` makes it. One person on two devices counts twice. Election night peaked at 8 browsers active in the same two minutes, at 10:16 p.m. ET.
 
 ## Repository history
 
 - **`election-night` tag**: the code exactly as it ran on Nov 3–4, including the party room, what-if scenarios, poll-closing countdown and minute-by-minute polling. The browser checks and rehearsal tools from that night are in `scripts/election-night/` and run against that version.
 - **`main`**: the frozen final page.
 
-Not included: runtime databases (the results log alone passed 1.4 GB), the host moderation key, guest handles and comments, visit counts, and the audio clips.
+Not included: the live runtime databases (the results log is here compressed instead), the host moderation key, guest handles and comments, and the audio clips.
 
 ## Run it locally
 

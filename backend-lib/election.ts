@@ -175,13 +175,14 @@ function logCounts() {
   return { snapshots: (log().query('SELECT count(*) AS n FROM observations').get() as {n: number}).n, attempts: (log().query('SELECT count(*) AS n FROM fetch_log').get() as {n: number}).n };
 }
 
-/** Evidence download. The full log passed 1 GB, so it is no longer served whole; it is archived privately when the count locks. */
+/** Evidence download. The full log passed 1 GB, so it is not served whole; compressed copies live in the public repo's data/archive/. */
+const REPO_URL = 'https://github.com/thevibethinker/tired-of-winning';
 export function auditExport() {
   const evidence = { baseline, marketAddendum, governorAddendum, nameCorrections, exportedAt: new Date().toISOString() };
   const caveat = 'Locally recorded source observations, not an independently timestamped audit. Source race calls are provisional, not certification.';
-  if (locked) return { ...evidence, finalRecord: locked, note: `${caveat} This is the locked final record; the full results log is archived privately and not served.` };
+  if (locked) return { ...evidence, finalRecord: locked, note: `${caveat} This is the locked final record. The full results log is not served here; a compressed copy is in data/archive/ at ${REPO_URL}.` };
   const latest = CHAMBERS.map(chamber => log().query('SELECT * FROM observations WHERE chamber=? ORDER BY id DESC LIMIT 1').get(chamber));
-  return { ...evidence, latest, counts: logCounts(), note: `${caveat} Latest source observation per chamber only; the full log is too large to serve whole.` };
+  return { ...evidence, latest, counts: logCounts(), note: `${caveat} Latest source observation per chamber only; the full log is too large to serve whole. A compressed copy through Nov 7 is in data/archive/ at ${REPO_URL}.` };
 }
 
 const globalState = globalThis as typeof globalThis & { electionTimer?: ReturnType<typeof setInterval> };
