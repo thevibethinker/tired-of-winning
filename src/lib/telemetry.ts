@@ -2,6 +2,8 @@
  *  No handles, IP addresses, cookies or third-party trackers. Global Privacy Control opts out. */
 export type TrackKind = 'view' | 'ping' | 'sound_on' | 'sound_off' | 'chat_open' | 'map_open' | 'soundboard_open';
 
+import { STATIC } from './static';
+
 const optedOut = () => (navigator as unknown as { globalPrivacyControl?: boolean }).globalPrivacyControl === true;
 let visitor = '';
 function visitorId() {
@@ -23,7 +25,7 @@ function via() {
 const source = via();
 
 export function track(kind: TrackKind) {
-  if (optedOut()) return;
+  if (STATIC || optedOut()) return;
   try {
     void fetch('/api/t', { method: 'POST', keepalive: true, credentials: 'omit', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ visitor: visitorId(), kind, device: device(), via: source }) }).catch(() => {});
   } catch { /* counting never blocks the page */ }

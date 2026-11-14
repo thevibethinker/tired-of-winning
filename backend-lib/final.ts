@@ -4,7 +4,9 @@ import type { LiveRace } from '../src/lib/election';
 /** The page locks at midnight ET ending Friday Nov 20, 2026, or earlier once every race with live data is called (V, Nov 7). */
 export const FREEZE_BY = '2026-11-21T05:00:00.000Z';
 export const FREEZE_RULE = 'Locked when every race with live data had a source call, or at midnight ET ending Friday Nov 20, 2026, whichever came first. Races still uncalled at the lock are shown as uncalled, never guessed.';
-export type FreezeReason = 'all-called' | 'deadline';
+/** 'archived': V ended the count early with one last pull on Nov 13, 2026, when the page moved to a static GitHub Pages archive. */
+export const ARCHIVE_RULE = 'Locked at one last results pull on Nov 13, 2026, when the page moved to a static archive on GitHub Pages (earlier than the planned Nov 20 lock). Races still uncalled at the lock are shown as uncalled, never guessed.';
+export type FreezeReason = 'all-called' | 'deadline' | 'archived';
 export type FinalInfo = { frozenAt: string; reason: FreezeReason; uncalled: number; rule: string };
 type Dashboard = { races: LiveRace[] };
 export type FinalRecord<D extends Dashboard = Dashboard> = { schema: 'tow-final-v1'; final: FinalInfo; dashboard: D };
@@ -35,11 +37,11 @@ export async function loadFinal<D extends Dashboard = Dashboard>(dir: string): P
 }
 
 /** Writes the lock once (temp file, then rename). Never overwrites an existing record for the same day. */
-export function writeFinal<D extends Dashboard>(dir: string, dashboard: D, reason: FreezeReason, frozenAt: string): { record: FinalRecord<D>; path: string } {
+export function writeFinal<D extends Dashboard>(dir: string, dashboard: D, reason: FreezeReason, frozenAt: string, rule: string = FREEZE_RULE): { record: FinalRecord<D>; path: string } {
   mkdirSync(dir, { recursive: true });
   const path = `${dir}final-results-${etDate(frozenAt)}.json`;
   if (existsSync(path)) throw new Error(`Refusing to overwrite ${path}`);
-  const record: FinalRecord<D> = { schema: 'tow-final-v1', final: { frozenAt, reason, uncalled: pendingRaces(dashboard.races).length, rule: FREEZE_RULE }, dashboard };
+  const record: FinalRecord<D> = { schema: 'tow-final-v1', final: { frozenAt, reason, uncalled: pendingRaces(dashboard.races).length, rule }, dashboard };
   writeFileSync(path + '.tmp', JSON.stringify(record, null, 1) + '\n', { flag: 'wx' });
   renameSync(path + '.tmp', path);
   return { record, path };

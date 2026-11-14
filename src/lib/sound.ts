@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { sadAllowed, type SadTrigger, type SoundId } from './sound-events';
 import { track } from './telemetry';
+import { STATIC } from './static';
 
 /** effects: race-call and level sounds, on by default (V, Nov 3 ~10:30 PM); an explicit “off” persists per browser.
  *  chat: 'auto' until the guest posts, then 'on'; 'off' once muted in the chat.
@@ -73,7 +74,7 @@ function onGesture(event: Event) {
 }
 let gesturesArmed = false;
 function armGestures() {
-  if (gesturesArmed) return;
+  if (STATIC || gesturesArmed) return;
   gesturesArmed = true;
   gestureEvents.forEach(e => window.addEventListener(e, onGesture, { capture: true, passive: true }));
 }
@@ -125,7 +126,7 @@ let current: AudioBufferSourceNode | null = null;
 /** Plays one sound, cutting off any clip still playing so calls never pile up.
  *  interrupt: false skips the sound instead when a clip is still playing (guest-action sounds never cut off a call). */
 export async function play(id: SoundId, { interrupt = true }: { interrupt?: boolean } = {}) {
-  if (!ctx) return false;
+  if (STATIC || !ctx) return false;
   if (ctx.state !== 'running') await ctx.resume().catch(() => {});
   if (ctx.state !== 'running') return false;
   if (!interrupt && current) return false;

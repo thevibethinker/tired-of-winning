@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 export default function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
         <Routes>
           <Route path="/_design" element={<Suspense fallback={<p>Loading design kit…</p>}><DesignKitDemo /></Suspense>} />
           <Route path="/" element={<ElectionNight />} />

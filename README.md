@@ -1,22 +1,22 @@
 ---
 created: 2026-11-03
-last_edited: 2026-11-07
-version: 2.1
+last_edited: 2026-11-13
+version: 2.2
 provenance: con_47LNC7Xg2RhZRrRT; rewritten for the public repo when the site was frozen (election-night notes moved to docs/election-night-log.md)
 ---
 # Tired of Winning?
 
 A one-night, phone-first watch-party dashboard for the November 3, 2026 U.S. midterms, built for a room of progressive friends and family. It takes the piss out of Trump's 2016 promise that "you're going to get so tired of winning": the more seats Democrats and left-leaning independents flipped, the more exhausted the meter got.
 
-**Live (frozen) page:** https://tired-of-winning-va.zocomputer.io
+**Final page (static archive):** https://thevibethinker.github.io/tired-of-winning/
 
-Since the election the page has been a frozen record. It keeps checking for late calls until it locks, then serves the locked final numbers with no further outside calls.
+The page is a frozen record. The count was locked at one last results pull on Nov 13, 2026: **+57 net flips, "Tired of winning"** (60 seats taken from the GOP, 3 lost; Senate 55–44, House 257–170, governors 30–20), with 7 races never called. The archive is a static build served by GitHub Pages: no server, no visit counting, and no sound clips. The original site ran on a Zo Computer and was taken down on Nov 10.
 
 ## What it showed
 
 - **One meter for the whole night: net flips.** GOP-held seats our listed candidate won, minus our seats lost, across the Senate, House and governors. Six levels: Low energy (under 5), Winning (5–14), Bigly winning (15–29), So much winning (30–44), Tired of winning (45–59), No more winning (60+). Only source calls count; a lead never moves the meter.
 - **Senate, House and governor cards** side by side, each with net flips and a seat bar against the forecast.
-- **Model vs. market.** Every Senate race carried a model probability (Split Ticket) and a market probability (Polymarket), both frozen at 8 a.m. ET on election day. As races were called, the page scored both with the same Brier score over exactly the same races. As of Nov 7, across 33 called Senate races, the model (0.033) edged the market (0.038). Lower is better.
+- **Model vs. market.** Every Senate race carried a model probability (Split Ticket) and a market probability (Polymarket), both frozen at 8 a.m. ET on election day. As races were called, the page scored both with the same Brier score over exactly the same races. At the lock, across 34 called Senate races, the model (0.058) edged the market (0.059). Lower is better.
 - **Races grouped by what happened:** flipped, seats lost, nail-biters, long shots ahead, favorites behind and so on, with a Contested/All switch, sorting and search across all 506 races.
 - **A state map**, separating source calls from the frozen forecast.
 - **Sounds.** Each call played a short Trump clip (a Democratic win got "WRONG!"; an upset got "You're fired") and sent his public-domain official portrait up the screen with the quote.
@@ -40,7 +40,11 @@ Everything frozen before polls opened lives in `data/baseline-20261103/` with re
 
 `backend-lib/final.ts` locks the count once every race with live data has a source call, or at midnight ET ending Friday Nov 20, 2026, whichever comes first. Until then the server checks civicAPI hourly and on visits. At the lock it writes `data/final/final-results-<date>.json` (written once, never overwritten). From then on the server serves that file and never opens the results log again. Races still uncalled at the lock stay uncalled; they are never guessed.
 
-When the lock lands, a follow-up job copies the locked record into this repo as `data/final/final-results-<date>.json`, together with a compressed copy of the complete results log (`data/archive/election-log-final-<date>.sqlite.xz`).
+**What actually happened:** the site was taken down on Nov 10, before either condition was met. On Nov 13 it was pulled one last time and locked by hand (reason `archived` in the record) so the page could move to GitHub Pages. Seven races (Alaska's Senate and House seats, MN-01, NC-05, NC-07, NC-10, TN-04) had no source call and stay uncalled. The locked record is `data/final/final-results-20261113.json`; the complete results log is `data/archive/election-log-final-20261113.sqlite.xz`.
+
+## The static archive
+
+`bun scripts/build_pages.ts` builds the page for GitHub Pages from the locked record: it writes the three API responses as JSON files (`api/election.json`, `api/reactions.json`, `api/receipts.json`), switches off visit counting, and leaves out the sound controls and clips. `.github/workflows/pages.yml` runs it on every push to `main`.
 
 ## The data
 
@@ -48,6 +52,8 @@ Everything the page recorded, kept for posterity:
 
 | File | What it is |
 |---|---|
+| `data/final/final-results-20261113.json` | The locked final record: all 506 races as of the last pull |
+| `data/archive/election-log-final-20261113.sqlite.xz` | The complete results log through the last pull on Nov 13 (10,254 snapshots, 13,438 fetch attempts). Supersedes the Nov 7 copy below |
 | `data/archive/election-log-through-20261107.sqlite.xz` | The complete results log through Nov 7: every civicAPI Senate, House and governor feed that changed (10,065 snapshots from Oct 23 to Nov 7) and every fetch attempt with its outcome (13,249, including the night's 502s and timeouts). 4.6 MB compressed, 1.4 GB as SQLite. |
 | `data/final/reactions-20261104.json` | The party room's final emoji counts per race (counts only), exported by `scripts/export_reactions.ts` |
 | `data/telemetry/visit-events-20261107.csv` | Every visit event: 934 events from 60 browsers, Nov 3–7 |

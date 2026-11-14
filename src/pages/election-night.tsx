@@ -7,6 +7,7 @@ import { levelSounds } from '../lib/sound-events';
 import { play, unlockAudio } from '../lib/sound';
 import { EventToast, SoundPin, SoundPromo, Soundboard, TrumpMeme, useSoundEvents } from '../components/sound-ui';
 import { startTelemetry, track } from '../lib/telemetry';
+import { STATIC, apiUrl } from '../lib/static';
 import './election-night.css';
 import './election-map.css';
 
@@ -216,7 +217,7 @@ export default function ElectionNight() {
     busy.current = true;
     setLoading(true);
     try {
-      const response = await fetch('/api/election', { headers: { Accept: 'application/json' }, cache: 'no-store', signal: AbortSignal.timeout(15_000) });
+      const response = await fetch(apiUrl('election'), { headers: { Accept: 'application/json' }, cache: 'no-store', signal: AbortSignal.timeout(15_000) });
       if (!response.ok) throw new Error('The results desk is temporarily unavailable.');
       const body = await response.json();
       if (!body.races || !body.chambers) throw new Error('The results desk sent an unreadable update.');
@@ -225,7 +226,7 @@ export default function ElectionNight() {
     finally { busy.current = false; setLoading(false); }
   }
   useEffect(() => { void refresh(); const timer = setInterval(() => { if (!locked.current && document.visibilityState === 'visible') void refresh(); }, 120_000); return () => clearInterval(timer); }, []);
-  useEffect(() => { fetch('/api/reactions', { headers: { Accept: 'application/json' } }).then(r => r.ok ? r.json() : null).then(body => { if (body?.counts) setReactions(body.counts); }).catch(() => {}); }, []);
+  useEffect(() => { fetch(apiUrl('reactions'), { headers: { Accept: 'application/json' } }).then(r => r.ok ? r.json() : null).then(body => { if (body?.counts) setReactions(body.counts); }).catch(() => {}); }, []);
   useEffect(() => {
     if (!data) return;
     const called = data.races.filter(r => r.result.status === 'won' || r.result.status === 'lost').map(r => r.id);
@@ -308,7 +309,7 @@ export default function ElectionNight() {
     <header className="masthead">
       <button className="wordmark" aria-label="Back to the top" onClick={() => window.scrollTo({ top: 0, behavior: reduceMotion() ? 'instant' : 'smooth' })}>TOW<span>★</span></button>
       <div className="masthead-title">Tired of Winning?<span>Midterms · Nov 3, 2026 · {final ? 'final' : 'still counting'}</span></div>
-      <SoundPin/>
+      {!STATIC && <SoundPin/>}
       {final ? <span className="live-pin is-final" title={`Locked ${day(final.frozenAt)}, 2026. ${final.rule}`}><small>Locked</small><b>{day(final.frozenAt)}</b></span> : <button className={`live-pin${stale || error ? ' warning' : ''}`} onClick={refresh} aria-busy={loading} aria-label={`${stale || error ? 'Feed delayed. ' : ''}Last received: ${receivedTimes}. Refresh results`} title={`Last received: ${receivedTimes}. Source updated: Senate ${time(senate.sourceUpdatedAt)}; House ${time(house.sourceUpdatedAt)}.`}>
         <small>{stale || error ? 'Feed' : 'As of'}</small><b>{stale || error ? 'Delayed' : clock(checkedAt)}</b><RefreshCw size={12} className={loading ? 'spinning' : ''} aria-hidden="true"/>
       </button>}
@@ -384,25 +385,27 @@ export default function ElectionNight() {
     <footer>
       <span className="footer-wordmark">Tired of Winning?<span>★</span></span>
       <p>Strong feelings, real sources, zero alternative facts. Forecast and odds frozen the morning of Nov 3, 2026. {final ? `Results as civicAPI reported them when the page locked on ${day(final.frozenAt)}: source calls, not certification.` : 'Results from civicAPI, checked hourly and on each visit until the page locks: source calls, not certification.'}</p>
-      <p>Built for one watch party. The chat closed at midnight on Nov 4; only its emoji counts are kept here. We count visits anonymously: a random browser ID, device type and the site that sent you. No names, IP addresses or ad trackers; Global Privacy Control turns it off. <button className="text-button" onClick={() => setBoardOpen(true)}>Open the soundboard</button></p>
+      <p>Built for one watch party. The chat closed at midnight on Nov 4; only its emoji counts are kept here. {STATIC ? <>This is the static archive: no visit counting, no trackers, and the night’s Trump clips are left out. Code and data: <a href="https://github.com/thevibethinker/tired-of-winning" target="_blank" rel="noreferrer">GitHub</a>.</> : <>We count visits anonymously: a random browser ID, device type and the site that sent you. No names, IP addresses or ad trackers; Global Privacy Control turns it off. <button className="text-button" onClick={() => setBoardOpen(true)}>Open the soundboard</button></>}</p>
       <div><a href={data.baseline.forecastUrl} target="_blank" rel="noreferrer">Split Ticket</a><a href="https://civicapi.org" target="_blank" rel="noreferrer">civicAPI</a><a href="https://polymarket.com" target="_blank" rel="noreferrer">Polymarket</a><a href={scheduleSource} target="_blank" rel="noreferrer">Poll times: The Hill</a><a href="https://zo.computer" target="_blank" rel="noreferrer">Built on Zo</a></div>
     </footer>
 
     <nav className="action-bar" aria-label="Quick actions">
       <button onClick={() => goTo('race-controls')}><Flag size={18} aria-hidden="true"/><span>Races</span></button>
       <button onClick={() => setMapOpen(true)} aria-haspopup="dialog"><MapIcon size={18} aria-hidden="true"/><span>Map</span></button>
-      <button className="accent-button" onClick={() => setBoardOpen(true)} aria-haspopup="dialog"><Volume2 size={18} aria-hidden="true"/><span>Sounds</span></button>
+      {!STATIC && <button className="accent-button" onClick={() => setBoardOpen(true)} aria-haspopup="dialog"><Volume2 size={18} aria-hidden="true"/><span>Sounds</span></button>}
     </nav>
 
     <Sheet open={mapOpen} onClose={() => setMapOpen(false)} label="Election map" wide>
       <header className="sheet-head"><div><h2>The map</h2><p>Tap a state to jump to its races. No Sharpie edits.</p></div><button className="sheet-close" onClick={() => setMapOpen(false)} aria-label="Close the map"><X size={20}/></button></header>
       <Suspense fallback={<p className="sheet-loading">Unfolding the map…</p>}><ElectionMap races={data.races} onOpenState={openState}/></Suspense>
     </Sheet>
+    {!STATIC && <>
     <Sheet open={boardOpen} onClose={() => setBoardOpen(false)} label="The soundboard">
       <Soundboard onClose={() => setBoardOpen(false)} locked={Boolean(final)}/>
     </Sheet>
     <SoundPromo hidden={Boolean(sound.toast)} onGo={playFinale} cta={<><b>Sound’s on.</b> Tap to hear how it ended.</>}/>
     <EventToast toast={sound.toast} onClose={sound.dismiss} onReplay={sound.replay}/>
     <TrumpMeme/>
+    </>}
   </div>;
 }
